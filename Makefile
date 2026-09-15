@@ -1,12 +1,15 @@
 .PHONY: bootstrap validate test check
 
+PYTHON ?= python
+RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
+
 bootstrap:
-	python -m pip install -e '.[dev]'
+	$(PYTHON) -m pip install -e '.[dev]'
 
 validate:
-	python -m jlpt_levels validate-contracts
+	$(RUN) -m jlpt_levels validate-contracts
 
 test:
-	python -m pytest
+	$(RUN) -m pytest
 
 check: validate test

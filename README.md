@@ -2,7 +2,7 @@
 
 A reproducible Yomitan term-metadata dictionary assigning every normalized Jitendex `(written form, reading)` lexeme to N5, N4, N3, N2, N1, or N0.
 
-N0 is project-defined: it means “outside/not assigned to N5–N1 by this project,” not an official JLPT level. Direct source evidence, conflicts, inference methods, confidence, and licensing are retained in machine-readable audit data.
+N0 is the project-defined “harder than N1” band, not an official JLPT level and never a placeholder for unknown or unassigned items. Every lexeme receives a best-estimate N5–N0 band. Direct source evidence, conflicts, reproducible inference, isolated residual adjudication, confidence, and licensing are retained in machine-readable audit data.
 
 ## Status
 

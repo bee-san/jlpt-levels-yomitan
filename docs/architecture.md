@@ -7,7 +7,7 @@ The pipeline is a sequence of immutable, canonical-JSON stages:
 1. `acquire`: fetch only registered sources, enforce byte/time limits, cache exact bytes, and verify pinned SHA-256.
 2. `inventory`: derive every Jitendex `(term, reading)` lexeme from a pinned dictionary ZIP. No lexical source row is silently dropped.
 3. `evidence`: normalize attributable source assertions without copying unlicensed prose.
-4. `classify`: resolve direct evidence first, retain disagreements, then run versioned conservative inference only where no direct label exists.
+4. `classify`: resolve direct evidence first, retain disagreements, then run versioned conservative inference where no direct label exists; send only unresolved residuals to isolated Bedrock Luna adjudication.
 5. `audit`: require exactly one classification per inventory lexeme and emit coverage, conflicts, methods, confidence, and source/license reports.
 6. `package`: emit sorted Yomitan `term_meta_bank_N.json`, `index.json`, audit JSON, and checksums from one frozen run manifest.
 
@@ -22,12 +22,12 @@ Each stage validates its input and output. Canonical JSON uses UTF-8, LF, sorted
 Every lexeme has one `level` in `N5..N0` and one `method`:
 
 - `direct`: at least one attributable vocabulary source asserts the selected N5–N1 level.
-- `inferred`: no direct assertion exists; a named, versioned policy produced the level from recorded features.
-- `unassigned`: no defensible N5–N1 result; level must be N0.
+- `inferred`: no direct assertion exists; a named, versioned policy produced the best-estimate N5–N0 level from recorded features.
+- `adjudicated`: reproducible inference remained uncertain; an item-isolated or tiny-batch Bedrock Luna run returned strict JSON, with exact input/output digests and model/prompt provenance retained.
 
-N0 means only “outside/not assigned to N5–N1 by this project.” It is not official, not “advanced,” and not evidence that a word cannot appear on a test.
+N0 means the evidence supports difficulty beyond N1. It is not official and never means unknown, unassigned, or merely absent from an N5–N1 source. Every N0 record must carry at least one concrete `features.postN1DifficultySignals` item. Every lexeme receives a best-estimate band; uncertainty is expressed by `method`, `confidence`, recorded features, and adjudication provenance rather than by selecting N0.
 
-Confidence is a calibrated decimal in `[0,1]`, not a source truth score. Direct conflicts are never erased: all assertions remain in `evidence`, `conflict=true`, and resolution records the deterministic policy and selected assertion IDs. Inference may not override direct evidence.
+Confidence is a calibrated decimal in `[0,1]`, not a source truth score. Direct conflicts are never erased: all assertions remain in `evidence`, `conflict=true`, and resolution records the deterministic policy and selected assertion IDs. Inference and adjudication may not override direct evidence. Each adjudication uses a fresh context, a batch of at most three tightly related lexemes, strict schema-validated JSON, and pinned provider/model/prompt identity; parse failures remain failed work rather than becoming N0.
 
 ## Yomitan encoding
 

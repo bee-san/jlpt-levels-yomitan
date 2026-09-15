@@ -13,7 +13,7 @@ from jlpt_levels.contracts import DATA_DIR, EXAMPLE_DIR, VENDORED_YOMITAN_DIR, e
 
 def test_declared_positive_and_negative_examples() -> None:
     checked, failures = validate_examples()
-    assert checked >= 14
+    assert checked >= 16
     assert failures == []
 
 
@@ -24,8 +24,8 @@ def test_declared_positive_and_negative_examples() -> None:
         ("N0", "direct", 1, False, False),
         ("N1", "inferred", 0, True, True),
         ("N1", "inferred", 1, True, False),
-        ("N0", "unassigned", 0, False, True),
-        ("N2", "unassigned", 0, False, False),
+        ("N0", "inferred", 0, True, True),
+        ("N2", "adjudicated", 0, True, False),
     ],
 )
 def test_method_level_boundaries(level: str, method: str, evidence_count: int, features: bool, valid: bool) -> None:
@@ -40,9 +40,46 @@ def test_method_level_boundaries(level: str, method: str, evidence_count: int, f
     document["conflict"] = len({item["assertedLevel"] for item in document["evidence"]}) > 1
     if features:
         document["features"] = {"kanaOnly": False}
+        if level == "N0":
+            document["features"]["postN1DifficultySignals"] = ["test-signal"]
     else:
         document.pop("features", None)
     assert (errors("classification.schema.json", document) == []) is valid
+
+
+def test_adjudication_is_isolated_pinned_and_bounded() -> None:
+    document = load_json(EXAMPLE_DIR / "classification.valid-adjudicated.json")
+    assert errors("classification.schema.json", document) == []
+    document["adjudication"]["batchSize"] = 4
+    assert errors("classification.schema.json", document)
+
+
+def test_n0_requires_recorded_post_n1_evidence() -> None:
+    document = load_json(EXAMPLE_DIR / "classification.valid-n0.json")
+    document["features"].pop("postN1DifficultySignals")
+    assert errors("classification.schema.json", document)
+    document["features"]["postN1DifficultySignals"] = []
+    assert errors("classification.schema.json", document)
+
+
+def test_method_specific_provenance_cannot_leak_between_paths() -> None:
+    direct = load_json(EXAMPLE_DIR / "classification.valid-direct-conflict.json")
+    direct["policy"].pop("selectedEvidenceIds")
+    assert errors("classification.schema.json", direct)
+
+    inferred = load_json(EXAMPLE_DIR / "classification.valid-inferred.json")
+    inferred["adjudication"] = load_json(EXAMPLE_DIR / "classification.valid-adjudicated.json")["adjudication"]
+    assert errors("classification.schema.json", inferred)
+
+    adjudicated = load_json(EXAMPLE_DIR / "classification.valid-adjudicated.json")
+    adjudicated["policy"]["selectedEvidenceIds"] = []
+    assert errors("classification.schema.json", adjudicated)
+
+
+def test_adjudication_provenance_is_mandatory() -> None:
+    document = load_json(EXAMPLE_DIR / "classification.valid-adjudicated.json")
+    document.pop("adjudication")
+    assert errors("classification.schema.json", document)
 
 
 def test_semantic_cross_field_invariants() -> None:
