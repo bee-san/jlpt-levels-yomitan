@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/jlpt-levels/schemas/source-registry-v1",
+  "title": "Pinned source registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sources"],
+  "properties": {
+    "version": {"const": 1},
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source"}
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "role", "publisherUrl", "acquisition", "license"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "name": {"type": "string", "minLength": 1},
+        "role": {"enum": ["lexical-inventory", "level-evidence", "inference-feature"]},
+        "publisherUrl": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "acquisition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "mediaType", "maxBytes"],
+          "properties": {
+            "status": {"enum": ["pending", "pinned"]},
+            "url": {"type": "string", "format": "uri", "pattern": "^https://"},
+            "revision": {"type": "string", "minLength": 1},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "mediaType": {"type": "string", "minLength": 1},
+            "maxBytes": {"type": "integer", "minimum": 1},
+            "minimumDelayMs": {"type": "integer", "minimum": 0}
+          },
+          "allOf": [{"if": {"properties": {"status": {"const": "pinned"}}}, "then": {"required": ["url", "revision", "sha256"]}}]
+        },
+        "license": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "redistributable"],
+          "properties": {
+            "status": {"enum": ["unknown", "verified", "restricted"]},
+            "redistributable": {"type": "boolean"},
+            "spdx": {"type": "string", "minLength": 1},
+            "terms": {"type": "string", "minLength": 1},
+            "evidenceUrl": {"type": "string", "format": "uri", "pattern": "^https://"},
+            "evidenceSha256": {"$ref": "#/$defs/sha256"},
+            "attribution": {"type": "string", "minLength": 1}
+          },
+          "allOf": [
+            {"if": {"properties": {"status": {"const": "verified"}}}, "then": {"required": ["evidenceUrl", "evidenceSha256", "attribution"], "anyOf": [{"required": ["spdx"]}, {"required": ["terms"]}]}},
+            {"if": {"properties": {"status": {"enum": ["unknown", "restricted"]}}}, "then": {"properties": {"redistributable": {"const": false}}}}
+          ]
+        }
+      }
+    }
+  }
+}

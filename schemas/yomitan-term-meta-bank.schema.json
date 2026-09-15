@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/jlpt-levels/schemas/yomitan-jlpt-term-meta-bank-v1",
+  "title": "Project-specific Yomitan term metadata bank",
+  "type": "array",
+  "items": {
+    "type": "array",
+    "prefixItems": [
+      {"type": "string", "minLength": 1},
+      {"const": "freq"},
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reading", "frequency"],
+        "properties": {
+          "reading": {"type": "string", "minLength": 1},
+          "frequency": {
+            "oneOf": [
+              {"const": {"value": 5, "displayValue": "N5"}},
+              {"const": {"value": 4, "displayValue": "N4"}},
+              {"const": {"value": 3, "displayValue": "N3"}},
+              {"const": {"value": 2, "displayValue": "N2"}},
+              {"const": {"value": 1, "displayValue": "N1"}},
+              {"const": {"value": 0, "displayValue": "N0"}}
+            ]
+          }
+        }
+      }
+    ],
+    "items": false,
+    "minItems": 3,
+    "maxItems": 3
+  }
+}

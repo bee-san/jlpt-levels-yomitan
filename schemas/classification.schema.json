@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/jlpt-levels/schemas/classification-v1",
+  "title": "JLPT classification with evidence and conflicts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lexemeId", "level", "method", "confidence", "conflict", "evidence", "policy"],
+  "properties": {
+    "lexemeId": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "level": {"enum": ["N5", "N4", "N3", "N2", "N1", "N0"]},
+    "method": {"enum": ["direct", "inferred", "unassigned"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "conflict": {"type": "boolean"},
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[1-9][0-9]*\\.[0-9]+\\.[0-9]+$"},
+        "selectedEvidenceIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^evidence:[0-9a-f]{64}$"}}
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidenceId", "sourceId", "sourceRecord", "snapshotSha256", "capturedAt", "assertedLevel"],
+        "properties": {
+          "evidenceId": {"type": "string", "pattern": "^evidence:[0-9a-f]{64}$"},
+          "sourceId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "sourceRecord": {"type": "string", "minLength": 1},
+          "snapshotSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "capturedAt": {"type": "string", "format": "date-time"},
+          "assertedLevel": {"enum": ["N5", "N4", "N3", "N2", "N1"]},
+          "quote": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "features": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"method": {"const": "direct"}}, "required": ["method"]}, "then": {"properties": {"level": {"not": {"const": "N0"}}, "evidence": {"minItems": 1}}}},
+    {"if": {"properties": {"method": {"const": "inferred"}}, "required": ["method"]}, "then": {"properties": {"level": {"not": {"const": "N0"}}, "evidence": {"maxItems": 0}}, "required": ["features"]}},
+    {"if": {"properties": {"method": {"const": "unassigned"}}, "required": ["method"]}, "then": {"properties": {"level": {"const": "N0"}, "evidence": {"maxItems": 0}}}}
+  ]
+}
