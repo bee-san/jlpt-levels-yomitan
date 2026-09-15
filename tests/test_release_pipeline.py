@@ -104,6 +104,8 @@ def test_workflows_have_read_only_build_and_isolated_write_job() -> None:
     assert "environment: release" in workflow
     assert "gh release create" in workflow
     assert "--draft" in workflow and "--verify-tag" in workflow
+    assert 'git config user.name "github-actions[bot]"' in workflow
+    assert 'git config user.email "41898282+github-actions[bot]@users.noreply.github.com"' in workflow
     assert "check_public_release.py" in workflow
     assert "persist-credentials: false" in workflow
     assert "if: needs.build.outputs.changed == 'true'" in workflow
