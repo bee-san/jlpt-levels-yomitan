@@ -113,6 +113,9 @@ def test_workflows_have_read_only_build_and_isolated_write_job() -> None:
     assert "JLPT_LEVELS_USER_AGENT:" in workflow
     assert "candidate/source-identities.json candidate/classifications.jsonl candidate/classification-diff.json" in workflow
     assert "first_release=true" in workflow
+    release = (root / "Makefile").read_text(encoding="utf-8").split("release-candidate:", 1)[1]
+    assert "build_source_identities.py build/source-identities.json" in release
+    assert "final-classifications.jsonl build/classifications.jsonl" in release
     assert "cache-hit" not in workflow
 
 

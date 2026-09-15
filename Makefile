@@ -75,3 +75,7 @@ release-candidate:
 	$(MAKE) finalize
 	$(MAKE) package REVISION="$(REVISION)" CREATED_AT="$$(printf '%s' '$(RESOLVED_DATE)' | tr . -)T00:00:00Z"
 	$(MAKE) verify-yomitan-import YOMITAN_ROOT="$(YOMITAN_ROOT)"
+	mkdir -p build
+	cp dist/jlpt-levels-yomitan.zip dist/SHA256SUMS dist/artifact-manifest.json build/
+	cp data/derived/final-classifications.jsonl build/classifications.jsonl
+	$(RUN) scripts/build_source_identities.py build/source-identities.json
