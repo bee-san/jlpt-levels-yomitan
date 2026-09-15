@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals
+.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -40,3 +40,6 @@ infer-fallback:
 
 adjudicate-residuals:
 	$(RUN) -m jlpt_levels adjudicate-residuals
+
+finalize:
+	$(RUN) -m jlpt_levels finalize

@@ -7,6 +7,7 @@ from pathlib import Path
 from .adjudication import BedrockBackend, run_queue
 from .contracts import DATA_DIR, SCHEMA_DIR, errors, load_json, validate_examples, validator
 from .fallback import predict_files, train_files
+from .finalize import finalize_files
 from .identity import canonical_json_bytes, lexeme_id
 from .jitendex import acquire, build_census
 from .matching import match_files
@@ -137,6 +138,21 @@ def _adjudicate_residuals(args: argparse.Namespace) -> int:
     return 0 if report["counts"]["pending"] == 0 else 2
 
 
+def _finalize(args: argparse.Namespace) -> int:
+    reports = finalize_files(
+        Path(args.lexemes), Path(args.direct), Path(args.inferred), Path(args.adjudicated),
+        Path(args.direct_audit), Path(args.output), Path(args.reports_dir),
+        baseline_path=Path(args.baseline) if args.baseline else None,
+        change_explanations_path=Path(args.change_explanations) if args.change_explanations else None,
+    )
+    coverage = reports["coverage"]
+    print(
+        f"OK: classifications={coverage['classifications']}, "
+        + ", ".join(f"{method}={count}" for method, count in coverage["byMethod"].items())
+    )
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -212,6 +228,17 @@ def parser() -> argparse.ArgumentParser:
     adjudicate.add_argument("--input-price-per-million", type=float)
     adjudicate.add_argument("--output-price-per-million", type=float)
     adjudicate.set_defaults(func=_adjudicate_residuals)
+    finalize = commands.add_parser("finalize", help="merge classification stages and prove exact census coverage")
+    finalize.add_argument("--lexemes", default="data/derived/jitendex.lexemes.jsonl")
+    finalize.add_argument("--direct", default="data/derived/direct-classifications.jsonl")
+    finalize.add_argument("--inferred", default="data/derived/fallback-inferred.jsonl")
+    finalize.add_argument("--adjudicated", default="data/derived/adjudicated-classifications.jsonl")
+    finalize.add_argument("--direct-audit", default="data/audit/direct-evidence-resolution.json")
+    finalize.add_argument("--output", default="data/derived/final-classifications.jsonl")
+    finalize.add_argument("--reports-dir", default="data/audit/final")
+    finalize.add_argument("--baseline")
+    finalize.add_argument("--change-explanations", help="JSON object mapping every intentional baseline change to a reason")
+    finalize.set_defaults(func=_finalize)
     return result
 
 

@@ -29,6 +29,8 @@ N0 means the evidence supports difficulty beyond N1. It is not official and neve
 
 Confidence is a calibrated decimal in `[0,1]`, not a source truth score. Direct conflicts are never erased: all assertions remain in `evidence`, `conflict=true`, and resolution records the deterministic policy and selected assertion IDs. Inference and adjudication may not override direct evidence. Each adjudication uses a fresh context, a batch of at most three tightly related lexemes, strict schema-validated JSON, and pinned provider/model/prompt identity; parse failures remain failed work rather than becoming N0.
 
+The final merge command is `jlpt-levels finalize`. Its precedence is `direct > inferred > adjudicated`; lower-precedence duplicate rows are retained in the conflict report rather than silently changing the result. A lexeme whose strongest direct evidence disagrees is resolved by inference or adjudication and carries `unresolved-direct-evidence-conflict`. Finalization fails on missing, extra, duplicate, schema-invalid, or wrong-method rows and writes canonical coverage, confidence, conflict, source, and baseline-change reports plus a digest manifest. When `--baseline` is supplied, every added, removed, level-changed, or method-changed lexeme must have a non-empty reason in the `--change-explanations` JSON object; stale explanations also fail. The source report explicitly distinguishes third-party assertions from project estimates; none of these labels are described as official.
+
 ## Yomitan encoding
 
 The public dictionary is format 3, `frequencyMode: rank-based`. Each lexeme emits:
