@@ -121,10 +121,13 @@ jobs:
           REVISION: ${{ needs.build.outputs.revision }}
         run: |
           tag="v${REVISION}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag --annotate "$tag" --message "$tag" "$GITHUB_SHA"
-          git push origin "refs/tags/$tag"
+          tag_object=$(gh api --method POST "repos/${GITHUB_REPOSITORY}/git/tags" \
+            -f "tag=$tag" -f "message=$tag" -f "object=$GITHUB_SHA" -f type=commit \
+            -f 'tagger[name]=github-actions[bot]' \
+            -f 'tagger[email]=41898282+github-actions[bot]@users.noreply.github.com' \
+            --jq .sha)
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f "ref=refs/tags/$tag" -f "sha=$tag_object"
           gh release create "$tag" --verify-tag --draft --latest \
             candidate/jlpt-levels-yomitan.zip candidate/SHA256SUMS candidate/artifact-manifest.json \
             candidate/source-identities.json candidate/classifications.jsonl candidate/classification-diff.json \
