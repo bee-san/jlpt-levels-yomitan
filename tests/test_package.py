@@ -157,9 +157,10 @@ def test_build_emits_reproducible_valid_yomitan_zip_and_sidecars(tmp_path: Path)
     assert manifest["counts"]["classifications"] == 7
     assert manifest["counts"]["conflicts"] == 1
     assert manifest["counts"]["levels"] == {"N0": 1, "N1": 1, "N2": 1, "N3": 2, "N4": 1, "N5": 1}
-    assert manifest["lexemesSha256"] == hashlib.sha256((tmp_path / "lexemes.jsonl").read_bytes()).hexdigest()
-    assert manifest["classificationsSha256"] == hashlib.sha256((tmp_path / "classifications.jsonl").read_bytes()).hexdigest()
-    assert manifest["vocabularyRegistrySha256"] == hashlib.sha256((tmp_path / "vocabulary-sources.json").read_bytes()).hexdigest()
+    assert manifest["inputs"]["lexemes"]["sha256"] == hashlib.sha256((tmp_path / "lexemes.jsonl").read_bytes()).hexdigest()
+    assert manifest["inputs"]["classifications"]["sha256"] == hashlib.sha256((tmp_path / "classifications.jsonl").read_bytes()).hexdigest()
+    assert manifest["inputs"]["vocabularySourceRegistry"]["sha256"] == hashlib.sha256((tmp_path / "vocabulary-sources.json").read_bytes()).hexdigest()
+    assert manifest["inputs"]["jitendexLock"]["sha256"] == hashlib.sha256((tmp_path / "jitendex.lock.json").read_bytes()).hexdigest()
     assert [item["path"] for item in manifest["files"]] == archive.namelist()
     for item in manifest["files"]:
         with zipfile.ZipFile(first.zip_path) as archive:

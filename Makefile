@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize package release-candidate
+.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize package verify-yomitan-import release-candidate
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -48,6 +48,14 @@ package:
 	@test -n "$(REVISION)" || (echo "REVISION is required" >&2; exit 2)
 	@test -n "$(CREATED_AT)" || (echo "CREATED_AT is required" >&2; exit 2)
 	$(RUN) -m jlpt_levels package --revision "$(REVISION)" --created-at "$(CREATED_AT)"
+
+verify-yomitan-import:
+	@test -n "$(YOMITAN_ROOT)" || (echo "YOMITAN_ROOT is required" >&2; exit 2)
+	rm -rf build/yomitan-import-probe
+	$(RUN) scripts/build_probe_dictionary.py build/yomitan-import-probe
+	node scripts/yomitan_import_probe.mjs "$(YOMITAN_ROOT)" \
+		build/yomitan-import-probe/jlpt-levels-yomitan.zip \
+		build/yomitan-import-probe/probe-expected.json
 
 release-candidate:
 	@test -n "$(RESOLVED_DATE)" || (echo "RESOLVED_DATE is required" >&2; exit 2)

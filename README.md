@@ -44,6 +44,14 @@ After `finalize` has produced `data/derived/final-classifications.jsonl`, build 
 make package REVISION=2026.09.15 CREATED_AT=2026-09-15T00:00:00Z
 ```
 
+To exercise the produced archive through Yomitan's actual `DictionaryImporter`, IndexedDB schema, and `findTermMetaBulk` lookup boundary, use a Yomitan checkout with its Node dependencies installed:
+
+```sh
+make verify-yomitan-import YOMITAN_ROOT=/path/to/yomitan
+```
+
+The probe builds identical synthetic N5, N1, and N0 entries through this project's production packager, imports the ZIP with Yomitan, and verifies exact term, reading, numeric rank, and display label results. This is a headless importer/database integration check; it does not claim GUI verification.
+
 Key interfaces:
 
 - `schemas/`: versioned lexical, classification, source, artifact, and strict Yomitan-bank contracts.

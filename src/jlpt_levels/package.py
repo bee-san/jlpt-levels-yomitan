@@ -222,11 +222,14 @@ def build_dictionary(
         "revision": revision,
         "createdAt": created_at,
         "sourceRegistrySha256": _sha256(source_registry_path.read_bytes()),
-        "vocabularyRegistrySha256": _sha256(vocabulary_registry_path.read_bytes()),
-        "lexemesSha256": _sha256(lexemes_path.read_bytes()),
-        "classificationsSha256": _sha256(classifications_path.read_bytes()),
         "jitendexSha256": jitendex_digest,
         "classifier": {"name": "complete-classification-pipeline", "version": "1.0.0"},
+        "inputs": {
+            "lexemes": {"sha256": _sha256(lexemes_path.read_bytes())},
+            "classifications": {"sha256": _sha256(classifications_path.read_bytes())},
+            "vocabularySourceRegistry": {"sha256": _sha256(vocabulary_registry_path.read_bytes())},
+            "jitendexLock": {"sha256": _sha256(jitendex_lock_path.read_bytes())},
+        },
         "counts": {
             "lexemes": len(rows),
             "classifications": len(rows),
