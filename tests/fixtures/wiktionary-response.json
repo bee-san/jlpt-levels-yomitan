@@ -1,0 +1,76 @@
+{
+  "query": {
+    "pages": [
+      {
+        "revisions": [
+          {
+            "revid": 85459359,
+            "slots": {
+              "main": {
+                "content": "There a total of 1 words.\n{| class=\"wikitable\"\n|-\n! Kanji !! Reading !! Meaning !! Frequency\n|-\n|{{l|ja|会う}} || {{l|ja|あう}} || [1] to meet; to encounter; to see [2] to have an accident; to have a bad experience || 311\n|}"
+              }
+            },
+            "timestamp": "2025-07-04T20:41:08Z"
+          }
+        ],
+        "title": "Appendix:JLPT/N5"
+      },
+      {
+        "revisions": [
+          {
+            "revid": 83724552,
+            "slots": {
+              "main": {
+                "content": "There a total of 1 words.\n{| class=\"wikitable\"\n|-\n! Kanji !! Reading !! Meaning !! Frequency\n|-\n|{{l|ja|間}} || {{l|ja|あいだ}} || [1] space (between); gap; interval; distance; stretch [2] period of time (during, while); duration; interval [3] between (two parties or things) || 209\n|}"
+              }
+            },
+            "timestamp": "2025-01-25T09:53:56Z"
+          }
+        ],
+        "title": "Appendix:JLPT/N4"
+      },
+      {
+        "revisions": [
+          {
+            "revid": 84079087,
+            "slots": {
+              "main": {
+                "content": "There a total of 1 words.\n{| class=\"wikitable\"\n|-\n! Kanji !! Reading !! Meaning !! Frequency\n|-\n|{{l|ja|愛}} || {{l|ja|あい}} || [1] love; affection; care [2] attachment; craving; desire [3] agape || 1357\n|}"
+              }
+            },
+            "timestamp": "2025-03-02T15:40:08Z"
+          }
+        ],
+        "title": "Appendix:JLPT/N3"
+      },
+      {
+        "revisions": [
+          {
+            "revid": 88447965,
+            "slots": {
+              "main": {
+                "content": "There a total of 1 words.\n{| class=\"wikitable\"\n|-\n! Kanji !! Reading !! Meaning !! Frequency\n|-\n|{{l|ja|相変わらず}} || {{l|ja|あいかわらず}} || as usual; as always; as before; as ever; still || 2629\n|}"
+              }
+            },
+            "timestamp": "2025-12-09T09:10:03Z"
+          }
+        ],
+        "title": "Appendix:JLPT/N2"
+      },
+      {
+        "revisions": [
+          {
+            "revid": 84094074,
+            "slots": {
+              "main": {
+                "content": "There a total of 1 words.\n{| class=\"wikitable\"\n|-\n! Kanji !! Reading !! Meaning !! Frequency\n|-\n|{{l|ja|嗚呼}} || {{l|ja|ああ}} || [1] ah!; oh!; alas! [2] yes; indeed; that is correct [3] aah; gah; argh || 74\n|}"
+              }
+            },
+            "timestamp": "2025-03-03T17:56:41Z"
+          }
+        ],
+        "title": "Appendix:JLPT/N1"
+      }
+    ]
+  }
+}
