@@ -108,7 +108,18 @@ def test_workflows_have_read_only_build_and_isolated_write_job() -> None:
     assert "persist-credentials: false" in workflow
     assert "if: needs.build.outputs.changed == 'true'" in workflow
     assert "make release-candidate" in workflow
+    assert "npm --prefix \"$RUNNER_TEMP/yomitan\" run build:libs" in workflow
+    assert "YOMITAN_ROOT" in workflow
+    assert "candidate/source-identities.json candidate/classification-diff.json" in workflow
     assert "cache-hit" not in workflow
+
+
+def test_release_candidate_includes_real_yomitan_import_gate() -> None:
+    root = Path(__file__).parents[1]
+    makefile = (root / "Makefile").read_text(encoding="utf-8")
+    release = makefile.split("release-candidate:", 1)[1]
+    assert 'test -n "$(YOMITAN_ROOT)"' in release
+    assert '$(MAKE) verify-yomitan-import YOMITAN_ROOT="$(YOMITAN_ROOT)"' in release
 
 
 def test_workflow_yaml_parses(tmp_path: Path) -> None:

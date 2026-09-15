@@ -27,7 +27,13 @@ def main() -> None:
     if release.get("draft") or release.get("prerelease"):
         raise SystemExit("release is not public and final")
     assets = {item["name"]: item for item in release["assets"]}
-    expected = {"jlpt-levels-yomitan.zip", "SHA256SUMS", "artifact-manifest.json"}
+    expected = {
+        "jlpt-levels-yomitan.zip",
+        "SHA256SUMS",
+        "artifact-manifest.json",
+        "source-identities.json",
+        "classification-diff.json",
+    }
     if set(assets) != expected:
         raise SystemExit(f"public asset inventory mismatch: {sorted(assets)}")
     with tempfile.TemporaryDirectory() as temporary:

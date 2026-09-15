@@ -59,6 +59,7 @@ verify-yomitan-import:
 
 release-candidate:
 	@test -n "$(RESOLVED_DATE)" || (echo "RESOLVED_DATE is required" >&2; exit 2)
+	@test -n "$(YOMITAN_ROOT)" || (echo "YOMITAN_ROOT is required" >&2; exit 2)
 	$(MAKE) check
 	$(MAKE) census-jitendex
 	$(MAKE) ingest-vocabulary
@@ -69,3 +70,4 @@ release-candidate:
 	$(MAKE) adjudicate-residuals
 	$(MAKE) finalize
 	$(MAKE) package REVISION="$(REVISION)" CREATED_AT="$$(printf '%s' '$(RESOLVED_DATE)' | tr . -)T00:00:00Z"
+	$(MAKE) verify-yomitan-import YOMITAN_ROOT="$(YOMITAN_ROOT)"

@@ -44,9 +44,13 @@ After `finalize` has produced `data/derived/final-classifications.jsonl`, build 
 make package REVISION=2026.09.15 CREATED_AT=2026-09-15T00:00:00Z
 ```
 
-To exercise the produced archive through Yomitan's actual `DictionaryImporter`, IndexedDB schema, and `findTermMetaBulk` lookup boundary, use a Yomitan checkout with its Node dependencies installed:
+To exercise the produced archive through Yomitan's actual `DictionaryImporter`, IndexedDB schema, and `findTermMetaBulk` lookup boundary, use the pinned Yomitan revision with its generated libraries prepared:
 
 ```sh
+git clone https://github.com/yomidevs/yomitan.git /path/to/yomitan
+git -C /path/to/yomitan checkout --detach d34832d756e05dc00945e5b7d7ebc80963299a7a
+npm --prefix /path/to/yomitan ci
+npm --prefix /path/to/yomitan run build:libs
 make verify-yomitan-import YOMITAN_ROOT=/path/to/yomitan
 ```
 
