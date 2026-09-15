@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "repository": "stephenmk/stephenmk.github.io",
+    "releaseId": 368758170,
+    "tag": "2026.08.11.0",
+    "publishedAt": "2026-08-11T18:09:47Z",
+    "immutable": true,
+    "apiUrl": "https://api.github.com/repos/stephenmk/stephenmk.github.io/releases/368758170"
+  },
+  "artifact": {
+    "name": "jitendex-yomitan.zip",
+    "url": "https://github.com/stephenmk/stephenmk.github.io/releases/download/2026.08.11.0/jitendex-yomitan.zip",
+    "bytes": 38698313,
+    "sha256": "8364e69e7bd0881c42011e96af921a7399d7fe06e2bf4fff4da6d18affff74fc",
+    "githubDigest": "sha256:8364e69e7bd0881c42011e96af921a7399d7fe06e2bf4fff4da6d18affff74fc"
+  },
+  "dictionary": {
+    "title": "Jitendex.org [2026-08-11]",
+    "revision": "2026.08.11.0",
+    "format": 3,
+    "indexUrl": "https://jitendex.org/static/yomitan.json"
+  },
+  "license": {
+    "status": "verified",
+    "redistributable": true,
+    "spdx": "CC-BY-SA-4.0",
+    "canonicalUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "publisherStatementUrl": "https://jitendex.org/pages/downloads.html",
+    "archiveAttributionSha256": "b32439c5e1d1ea7f83d8a6063933626a91535f6da3ca123620851c1871232d28"
+  }
+}

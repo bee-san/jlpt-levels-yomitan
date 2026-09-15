@@ -7,14 +7,21 @@
       "role": "lexical-inventory",
       "publisherUrl": "https://jitendex.org/",
       "acquisition": {
-        "status": "pending",
+        "status": "pinned",
+        "url": "https://github.com/stephenmk/stephenmk.github.io/releases/download/2026.08.11.0/jitendex-yomitan.zip",
+        "revision": "2026.08.11.0",
+        "sha256": "8364e69e7bd0881c42011e96af921a7399d7fe06e2bf4fff4da6d18affff74fc",
         "mediaType": "application/zip",
         "maxBytes": 1073741824,
         "minimumDelayMs": 1000
       },
       "license": {
-        "status": "unknown",
-        "redistributable": false
+        "status": "verified",
+        "spdx": "CC-BY-SA-4.0",
+        "evidenceUrl": "https://jitendex.org/pages/downloads.html",
+        "evidenceSha256": "098e51c2dfe81622462e96b9c1bd88b6f0ba0206f94ada10f9a6c0f2d8a2538d",
+        "attribution": "© CC BY-SA 4.0 Stephen Kraus 2023-2026; incorporates JMdict and CC BY 2.0 FR Tatoeba material as recorded in the locked archive",
+        "redistributable": true
       }
     }
   ]

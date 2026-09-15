@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"name": "kana-only-empty-reading", "row": ["する", "", "", "", 0, ["definition"], 1157170, ""]},
+    {"name": "variant-negative-sequence", "row": ["爲る", "する", "", "", 0, ["definition"], -1157170, ""]},
+    {"name": "multiple-reading-a", "row": ["開く", "あく", "", "", 0, ["definition"], 1200000, ""]},
+    {"name": "multiple-reading-b", "row": ["開く", "ひらく", "", "", 0, ["definition"], 1200000, ""]},
+    {"name": "duplicate-pair-new-sequence", "row": ["する", "", "", "", 0, ["other definition"], 9999999, ""]}
+  ]
+}

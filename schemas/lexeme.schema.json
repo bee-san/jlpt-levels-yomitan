@@ -12,12 +12,29 @@
     "jitendex": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["dictionarySha256", "bank", "row"],
+      "required": ["dictionarySha256", "occurrences", "upstreamIds"],
       "properties": {
         "dictionarySha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "bank": {"type": "string", "pattern": "^term_bank_[1-9][0-9]*\\.json$"},
-        "row": {"type": "integer", "minimum": 0},
-        "sequence": {"type": "integer", "minimum": 0}
+        "occurrences": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["bank", "row", "sequence"],
+            "properties": {
+              "bank": {"type": "string", "pattern": "^term_bank_[1-9][0-9]*\\.json$"},
+              "row": {"type": "integer", "minimum": 0},
+              "sequence": {"type": "integer", "not": {"const": 0}}
+            }
+          }
+        },
+        "upstreamIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^jitendex:sequence:[1-9][0-9]*$"}
+        }
       }
     }
   }

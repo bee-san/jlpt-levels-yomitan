@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .contracts import SCHEMA_DIR, errors, load_json, validate_examples, validator
 from .identity import canonical_json_bytes, lexeme_id
+from .jitendex import acquire, build_census
 
 
 def _validate_contracts(_: argparse.Namespace) -> int:
@@ -41,6 +42,22 @@ def _lexeme_id(args: argparse.Namespace) -> int:
     return 0
 
 
+def _acquire_jitendex(args: argparse.Namespace) -> int:
+    print(acquire(Path(args.lock), Path(args.cache_dir)))
+    return 0
+
+
+def _census_jitendex(args: argparse.Namespace) -> int:
+    census = build_census(
+        Path(args.archive), Path(args.lock), Path(args.lexemes), Path(args.census)
+    )
+    print(
+        f"OK: {census['counts']['rawRows']} rows -> "
+        f"{census['counts']['normalizedLexemes']} normalized lexemes"
+    )
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -58,6 +75,16 @@ def parser() -> argparse.ArgumentParser:
     identity.add_argument("term")
     identity.add_argument("reading")
     identity.set_defaults(func=_lexeme_id)
+    acquire_parser = commands.add_parser("acquire-jitendex", help="fetch the exact locked Jitendex archive")
+    acquire_parser.add_argument("--lock", default="data/sources/jitendex.lock.json")
+    acquire_parser.add_argument("--cache-dir", default="data/cache/jitendex")
+    acquire_parser.set_defaults(func=_acquire_jitendex)
+    census = commands.add_parser("census-jitendex", help="extract the complete locked Jitendex lexeme census")
+    census.add_argument("archive")
+    census.add_argument("--lock", default="data/sources/jitendex.lock.json")
+    census.add_argument("--lexemes", default="data/derived/jitendex.lexemes.jsonl")
+    census.add_argument("--census", default="data/derived/jitendex.census.json")
+    census.set_defaults(func=_census_jitendex)
     return result
 
 

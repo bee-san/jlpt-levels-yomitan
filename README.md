@@ -6,7 +6,25 @@ N0 is the project-defined “harder than N1” band, not an official JLPT level 
 
 ## Status
 
-Architecture and contracts are frozen; acquisition and classification are not yet implemented. `config/sources.json` therefore fails closed with Jitendex redistribution marked unknown. No dictionary artifact is claimed yet.
+Architecture and contracts are frozen. Jitendex acquisition and its lexical census are implemented and pinned; classification is not yet implemented. No dictionary artifact is claimed yet.
+
+## Pinned Jitendex inventory
+
+The lexical universe is extracted from immutable Jitendex release `2026.08.11.0`.
+Its GitHub asset digest, archive identity, publisher attribution, and CC BY-SA 4.0
+redistribution evidence are frozen in `data/sources/jitendex.lock.json` and
+`config/sources.json`. Run `make census-jitendex` to reproduce it.
+
+Acquisition uses a content-addressed ignored cache and verifies exact size and
+SHA-256 before use. The census validates every contiguous Yomitan v3
+`term_bank_N.json`; metadata and media banks are intentionally not lexemes. An
+empty source reading is Yomitan's spelling-only variant representation and is
+normalized to the written term. Exact `(term, reading)` duplicates collapse to
+one classification key while retaining every bank/row and signed sequence
+occurrence plus stable absolute-sequence upstream IDs.
+
+The checked-in report is `data/derived/jitendex.census.json`; the larger
+deterministic universe is regenerated as `data/derived/jitendex.lexemes.jsonl`.
 
 ## Developer quick start
 
