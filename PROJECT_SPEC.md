@@ -5,8 +5,8 @@ Create and publish a reproducible, self-updating Yomitan term-frequency/metadata
 
 ## Truthfulness
 - N5–N1 assignments must be backed by attributable vocabulary-list evidence wherever available.
-- N0 means “outside/not assigned to N5–N1 by this project,” not an official JLPT level.
-- Where word-level evidence is absent, use a documented conservative inference based on component kanji levels, kana/commonness, readings, senses, and other reproducible features. Do not present inferred labels as official.
+- N0 means harder than N1 (post-N1 difficulty), not “unassigned,” “unknown,” or merely absent from sourced JLPT lists. N0 is a project-defined extension because the official JLPT ends at N1.
+- Where word-level evidence is absent, use documented inference based on component kanji levels, kana/commonness, readings, senses, and other reproducible features, followed by item-isolated Luna adjudication when deterministic evidence is insufficient. Every lexeme must receive a best-estimate N5–N0 level; uncertainty belongs in method/confidence/provenance fields, never in the meaning of N0. Do not present inferred labels as official.
 - Preserve provenance, confidence, method, source timestamps, and conflicts in machine-readable audit data.
 - Cover every normalized Jitendex lexeme key (written form + reading), including kana-only and multi-reading entries. No silent drops.
 
