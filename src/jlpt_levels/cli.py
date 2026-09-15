@@ -4,6 +4,7 @@ import argparse
 import os
 from pathlib import Path
 
+from .adjudication import BedrockBackend, run_queue
 from .contracts import DATA_DIR, SCHEMA_DIR, errors, load_json, validate_examples, validator
 from .fallback import predict_files, train_files
 from .identity import canonical_json_bytes, lexeme_id
@@ -124,6 +125,18 @@ def _infer_fallback(args: argparse.Namespace) -> int:
     return 0
 
 
+def _adjudicate_residuals(args: argparse.Namespace) -> int:
+    report = run_queue(
+        Path(args.queue), Path(args.output), Path(args.pending), Path(args.report),
+        Path(args.cache_dir), BedrockBackend(args.region), concurrency=args.concurrency,
+        retries=args.retries, max_tokens=args.max_tokens,
+        input_price_per_million=args.input_price_per_million,
+        output_price_per_million=args.output_price_per_million,
+    )
+    print("OK: " + ", ".join(f"{key}={value}" for key, value in report["counts"].items()))
+    return 0 if report["counts"]["pending"] == 0 else 2
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -186,6 +199,19 @@ def parser() -> argparse.ArgumentParser:
     infer.add_argument("--inferred", default="data/derived/fallback-inferred.jsonl")
     infer.add_argument("--adjudication-required", default="data/derived/fallback-adjudication-required.jsonl")
     infer.set_defaults(func=_infer_fallback)
+    adjudicate = commands.add_parser("adjudicate-residuals", help="run isolated Bedrock Luna adjudications")
+    adjudicate.add_argument("--queue", default="data/derived/fallback-adjudication-required.jsonl")
+    adjudicate.add_argument("--output", default="data/derived/adjudicated-classifications.jsonl")
+    adjudicate.add_argument("--pending", default="data/derived/adjudication-pending.jsonl")
+    adjudicate.add_argument("--report", default="data/audit/adjudication-report.json")
+    adjudicate.add_argument("--cache-dir", default="data/cache/adjudication")
+    adjudicate.add_argument("--region", default="us-east-1")
+    adjudicate.add_argument("--concurrency", type=int, default=8)
+    adjudicate.add_argument("--retries", type=int, default=3)
+    adjudicate.add_argument("--max-tokens", type=int, default=700)
+    adjudicate.add_argument("--input-price-per-million", type=float)
+    adjudicate.add_argument("--output-price-per-million", type=float)
+    adjudicate.set_defaults(func=_adjudicate_residuals)
     return result
 
 
