@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {"schema":"lexeme.schema.json","file":"lexeme.valid.json","valid":true},
+    {"schema":"lexeme.schema.json","file":"lexeme.invalid-empty-reading.json","valid":false},
+    {"schema":"classification.schema.json","file":"classification.valid-direct-conflict.json","valid":true},
+    {"schema":"classification.schema.json","file":"classification.valid-inferred.json","valid":true},
+    {"schema":"classification.schema.json","file":"classification.valid-n0.json","valid":true},
+    {"schema":"classification.schema.json","file":"classification.valid-adjudicated.json","valid":true},
+    {"schema":"classification.schema.json","file":"classification.invalid-official-n0.json","valid":false},
+    {"schema":"classification.schema.json","file":"classification.invalid-unassigned.json","valid":false},
+    {"schema":"source-registry.schema.json","file":"source-registry.valid.json","valid":true},
+    {"schema":"source-registry.schema.json","file":"source-registry.invalid-unverified-redistribution.json","valid":false},
+    {"schema":"source-registry.schema.json","file":"../config/sources.json","valid":true},
+    {"schema":"artifact-manifest.schema.json","file":"artifact-manifest.valid.json","valid":true},
+    {"schema":"artifact-manifest.schema.json","file":"artifact-manifest.invalid-missing-n0.json","valid":false},
+    {"schema":"yomitan-term-meta-bank.schema.json","file":"yomitan-term-meta-bank.valid.json","valid":true},
+    {"schema":"yomitan-term-meta-bank.schema.json","file":"yomitan-term-meta-bank.invalid-unqualified.json","valid":false},
+    {"schema":"yomitan-term-meta-bank.schema.json","file":"yomitan-term-meta-bank.invalid-mismatched-label.json","valid":false}
+  ]
+}

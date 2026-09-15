@@ -1,0 +1,47 @@
+{
+  "sources": [
+    {
+      "adapter": "wiktionary-jlpt",
+      "apiUrl": "https://en.wiktionary.org/w/api.php",
+      "id": "enwiktionary-jlpt-appendices",
+      "license": {
+        "attribution": "Derived from English Wiktionary Appendix:JLPT pages; normalized by JLPT Levels for Yomitan; no meanings are retained.",
+        "evidenceUrl": "https://en.wiktionary.org/wiki/Wiktionary:Copyrights",
+        "redistributable": true,
+        "spdx": "CC-BY-SA-4.0"
+      },
+      "maxBytes": 8388608,
+      "minimumDelayMs": 1000,
+      "officialJlpt": false,
+      "pages": {
+        "N1": {
+          "revision": 84094074,
+          "sha256": "13d5b6134a8d0e97ae5aed50baa433d56bbee339f5ca8b8348eeea9da12ae71e",
+          "title": "Appendix:JLPT/N1"
+        },
+        "N2": {
+          "revision": 88447965,
+          "sha256": "f5c46af8009b5675c1900a3f6d03dfc8629f2ef79cda75e03b6ace162b420fda",
+          "title": "Appendix:JLPT/N2"
+        },
+        "N3": {
+          "revision": 84079087,
+          "sha256": "fba6c174f2a96d70d99f86a984dcd298eac6a68304093dd27264268bfbc36355",
+          "title": "Appendix:JLPT/N3"
+        },
+        "N4": {
+          "revision": 83724552,
+          "sha256": "e53e86ac045017583080e126cddf9c7d4dfa8cace6efcddebe2380c50ee9cace",
+          "title": "Appendix:JLPT/N4"
+        },
+        "N5": {
+          "revision": 85459359,
+          "sha256": "28cd84a3de7b1efdc39720530c1480da35b3da50eab371966421ebe84c869842",
+          "title": "Appendix:JLPT/N5"
+        }
+      },
+      "role": "level-evidence"
+    }
+  ],
+  "version": 1
+}

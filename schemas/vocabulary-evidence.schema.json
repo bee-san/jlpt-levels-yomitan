@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/jlpt-levels/schemas/vocabulary-evidence-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assertedLevel", "capturedAt", "evidenceId", "license", "reading", "snapshotSha256", "sourceId", "sourceRecord", "sourceUrl", "term"],
+  "properties": {
+    "assertedLevel": {"enum": ["N5", "N4", "N3", "N2", "N1"]},
+    "capturedAt": {"type": "string", "format": "date-time"},
+    "evidenceId": {"type": "string", "pattern": "^evidence:[0-9a-f]{64}$"},
+    "license": {"const": "CC-BY-SA-4.0"},
+    "reading": {"type": "string", "minLength": 1},
+    "snapshotSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceId": {"const": "enwiktionary-jlpt-appendices"},
+    "sourceRecord": {"type": "string", "minLength": 1},
+    "sourceUrl": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "term": {"type": "string", "minLength": 1}
+  }
+}

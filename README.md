@@ -1,3 +1,48 @@
 # JLPT Levels for Yomitan
 
-Self-updating JLPT level metadata/frequency dictionary covering the Jitendex lexicon.
+A reproducible Yomitan term-metadata dictionary assigning every normalized Jitendex `(written form, reading)` lexeme to N5, N4, N3, N2, N1, or N0.
+
+N0 is the project-defined “harder than N1” band, not an official JLPT level and never a placeholder for unknown or unassigned items. Every lexeme receives a best-estimate N5–N0 band. Direct source evidence, conflicts, reproducible inference, isolated residual adjudication, confidence, and licensing are retained in machine-readable audit data.
+
+## Status
+
+Architecture and contracts are frozen. Jitendex acquisition and its lexical census are implemented and pinned; classification is not yet implemented. No dictionary artifact is claimed yet.
+
+## Pinned Jitendex inventory
+
+The lexical universe is extracted from immutable Jitendex release `2026.08.11.0`.
+Its GitHub asset digest, archive identity, publisher attribution, and CC BY-SA 4.0
+redistribution evidence are frozen in `data/sources/jitendex.lock.json` and
+`config/sources.json`. Run `make census-jitendex` to reproduce it.
+
+Acquisition uses a content-addressed ignored cache and verifies exact size and
+SHA-256 before use. The census validates every contiguous Yomitan v3
+`term_bank_N.json`; metadata and media banks are intentionally not lexemes. An
+empty source reading is Yomitan's spelling-only variant representation and is
+normalized to the written term. Exact `(term, reading)` duplicates collapse to
+one classification key while retaining every bank/row and signed sequence
+occurrence plus stable absolute-sequence upstream IDs.
+
+The checked-in report is `data/derived/jitendex.census.json`; the larger
+deterministic universe is regenerated as `data/derived/jitendex.lexemes.jsonl`.
+
+## Developer quick start
+
+```sh
+python -m venv .venv
+. .venv/bin/activate
+make bootstrap
+make check
+jlpt-levels --help
+```
+
+Key interfaces:
+
+- `schemas/`: versioned lexical, classification, source, artifact, and strict Yomitan-bank contracts.
+- `examples/manifest.json`: positive and deliberately invalid contract fixtures.
+- `config/sources.json`: source registry; public inclusion requires verified redistribution.
+- `docs/architecture.md`: pipeline, identity, N0 semantics, conflicts, deterministic artifacts, and Yomitan encoding.
+- `docs/source-policy.md`: acquisition and licensing policy.
+- `docs/fallback-classifier.md`: versioned grouped-holdout kanji/linguistic inference and abstention contract.
+
+Software is MIT-licensed. Source data and generated data are governed independently by their recorded source licenses; the MIT license does not grant redistribution rights to third-party data.
