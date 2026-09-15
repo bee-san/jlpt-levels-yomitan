@@ -1,0 +1,16 @@
+{
+  "contract": "t_5168fd16",
+  "jitendex": "t_c03c9792",
+  "sources": "t_9cee5b12",
+  "ingest": "t_7eab59c0",
+  "identity": "t_f9e72803",
+  "direct": "t_6bbe2690",
+  "features": "t_871b8c31",
+  "llm": "t_c376a52e",
+  "merge": "t_294e7eef",
+  "dict": "t_0df71f51",
+  "automation": "t_317a4bdd",
+  "validation": "t_20cada1b",
+  "review": "t_59b62c59",
+  "publish": "t_9d8e71af"
+}
