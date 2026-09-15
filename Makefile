@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize package verify-yomitan-import release-candidate
+.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct build-fallback-inputs train-fallback infer-fallback adjudicate-residuals finalize package verify-yomitan-import release-candidate
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -32,8 +32,11 @@ match-vocabulary:
 resolve-direct:
 	$(RUN) -m jlpt_levels resolve-direct
 
+build-fallback-inputs:
+	$(RUN) scripts/build_fallback_inputs.py
+
 train-fallback:
-	$(RUN) -m jlpt_levels train-fallback
+	$(RUN) -m jlpt_levels train-fallback --confidence-threshold 0
 
 infer-fallback:
 	$(RUN) -m jlpt_levels infer-fallback
@@ -65,6 +68,7 @@ release-candidate:
 	$(MAKE) ingest-vocabulary
 	$(MAKE) match-vocabulary
 	$(MAKE) resolve-direct
+	$(MAKE) build-fallback-inputs
 	$(MAKE) train-fallback
 	$(MAKE) infer-fallback
 	$(MAKE) adjudicate-residuals

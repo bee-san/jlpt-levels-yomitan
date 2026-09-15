@@ -20,7 +20,7 @@ The implementation is a smoothed categorical Naive Bayes model. It is intentiona
 
 Component kanji are evidence, never a hard assignment. A difficult character can raise the model's support for a difficult band, but commonness, morphology, reading and orthographic evidence can outweigh it. N0 is emitted only when the ordinary prediction is N1 with sufficient calibrated confidence and the residual record carries at least two explicit `postN1DifficultySignals`; absence or uncertainty can never produce N0.
 
-Predictions below the confidence threshold, without substantive evidence, or entirely outside the fitted vocabulary abstain. `infer-fallback` writes abstentions to a separate `adjudication-required.jsonl` queue. The downstream item-isolated Bedrock Luna stage must assign their best estimate and retain uncertainty in confidence/provenance rather than encoding it as N0.
+Predictions below the configured confidence threshold, without substantive evidence, or entirely outside the fitted vocabulary abstain. `infer-fallback` writes abstentions to a separate `adjudication-required.jsonl` queue. Release builds use a zero confidence threshold because the product contract requires a best estimate for every lexeme; the emitted confidence preserves uncertainty instead of changing the label to N0. Any item that remains out of domain or lacks even reproducible orthographic support still fails into the item-isolated Bedrock Luna queue.
 
 ## Calibration without leakage
 

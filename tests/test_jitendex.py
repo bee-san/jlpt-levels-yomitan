@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import urllib.request
 import zipfile
 from pathlib import Path
 
@@ -66,6 +67,39 @@ def test_acquire_uses_verified_content_addressed_cache(tmp_path: Path) -> None:
     cached.write_bytes(b"corrupt")
     with pytest.raises(JitendexError, match="size differs"):
         acquire(lock_path, tmp_path / "cache")
+
+
+def test_acquire_accepts_only_github_release_storage_redirects(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    rows = [json.loads(FIXTURE.read_text())["cases"][0]["row"]]
+    source, lock_path = _fixture_zip(tmp_path / "source.zip", rows)
+
+    class FileResponse:
+        def __init__(self, url: str) -> None:
+            self.url = url
+            self.stream = None
+
+        def __enter__(self):
+            self.stream = source.open("rb")
+            return self
+
+        def __exit__(self, *args):
+            assert self.stream is not None
+            self.stream.close()
+
+        def read(self, size: int = -1) -> bytes:
+            assert self.stream is not None
+            return self.stream.read(size)
+
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *_args, **_kwargs: FileResponse(
+        "https://release-assets.githubusercontent.com/github-production-release-asset/1/object?token=temporary"
+    ))
+    assert acquire(lock_path, tmp_path / "accepted").read_bytes() == source.read_bytes()
+
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *_args, **_kwargs: FileResponse(
+        "https://example.invalid/replaced.zip"
+    ))
+    with pytest.raises(JitendexError, match="outside GitHub release asset storage"):
+        acquire(lock_path, tmp_path / "rejected")
 
 
 def test_adversarial_census_preserves_variants_readings_and_duplicate_provenance(tmp_path: Path) -> None:

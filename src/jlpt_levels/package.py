@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .contracts import errors
+from .contracts import _semantic_errors, errors, validator
 from .identity import canonical_json_bytes
 
 LEVEL_VALUE = {"N5": 1, "N4": 2, "N3": 3, "N2": 4, "N1": 5, "N0": 6}
@@ -100,8 +100,18 @@ def _validated_rows(
     lexemes = _load_jsonl(lexemes_path)
     classifications = _load_jsonl(classifications_path)
     by_id: dict[str, dict[str, Any]] = {}
+    classification_validator = validator("classification.schema.json")
+    lexeme_validator = validator("lexeme.schema.json")
+
+    def validation_errors(schema_name: str, schema_validator: Any, row: dict[str, Any]) -> list[str]:
+        structural = sorted(schema_validator.iter_errors(row), key=lambda error: list(error.absolute_path))
+        return [
+            f"/{'/'.join(map(str, error.absolute_path))}: {error.message}"
+            for error in structural
+        ] + _semantic_errors(schema_name, row)
+
     for classification in classifications:
-        found = errors("classification.schema.json", classification)
+        found = validation_errors("classification.schema.json", classification_validator, classification)
         if found:
             raise PackagingError("invalid classification: " + "; ".join(found))
         lexeme_id = classification["lexemeId"]
@@ -118,7 +128,7 @@ def _validated_rows(
     level_counts: Counter[str] = Counter()
     conflicts = 0
     for lexeme in lexemes:
-        found = errors("lexeme.schema.json", lexeme)
+        found = validation_errors("lexeme.schema.json", lexeme_validator, lexeme)
         if found:
             raise PackagingError("invalid lexeme: " + "; ".join(found))
         lexeme_id = lexeme["lexemeId"]
@@ -213,10 +223,10 @@ def build_dictionary(
         members.append((name, canonical_json_bytes(rows[start:start + bank_size])))
 
     zip_payload = _zip_bytes(members)
-    files = [
+    files = sorted([
         {"path": name, "sha256": _sha256(payload), "bytes": len(payload)}
         for name, payload in members
-    ]
+    ], key=lambda item: item["path"])
     manifest = {
         "schemaVersion": 1,
         "revision": revision,

@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
 
-from .contracts import errors
+from .contracts import _semantic_errors, validator
 from .identity import canonical_json_bytes
 
 LEVELS = ("N5", "N4", "N3", "N2", "N1", "N0")
@@ -19,8 +19,7 @@ class FinalizationError(ValueError):
     pass
 
 
-def read_jsonl(path: Path) -> list[dict]:
-    rows: list[dict] = []
+def read_jsonl(path: Path) -> Iterable[dict]:
     with path.open(encoding="utf-8") as source:
         for number, line in enumerate(source, 1):
             try:
@@ -29,8 +28,7 @@ def read_jsonl(path: Path) -> list[dict]:
                 raise FinalizationError(f"{path}:{number}: invalid JSON") from error
             if not isinstance(row, dict):
                 raise FinalizationError(f"{path}:{number}: row must be an object")
-            rows.append(row)
-    return rows
+            yield row
 
 
 def _index(rows: Iterable[dict], kind: str) -> dict[str, dict]:
@@ -46,12 +44,17 @@ def _index(rows: Iterable[dict], kind: str) -> dict[str, dict]:
 
 
 def _validate_classifications(rows: Iterable[dict], expected_method: str) -> None:
+    schema_validator = validator("classification.schema.json")
     for row in rows:
         if row.get("method") != expected_method:
             raise FinalizationError(
                 f"{expected_method} input contains method {row.get('method')!r} for {row.get('lexemeId')!r}"
             )
-        found = errors("classification.schema.json", row)
+        structural = sorted(schema_validator.iter_errors(row), key=lambda error: list(error.absolute_path))
+        found = [
+            f"/{'/'.join(map(str, error.absolute_path))}: {error.message}"
+            for error in structural
+        ] + _semantic_errors("classification.schema.json", row)
         if found:
             raise FinalizationError(f"invalid {expected_method} classification {row.get('lexemeId')}: {found[0]}")
 
@@ -135,7 +138,14 @@ def finalize_records(
     baseline: Iterable[dict] | None = None,
     change_explanations: dict[str, str] | None = None,
 ) -> tuple[list[dict], dict[str, dict]]:
-    census = _index(lexemes, "census")
+    census_ids: set[str] = set()
+    for row in lexemes:
+        identity = row.get("lexemeId")
+        if not isinstance(identity, str) or not identity:
+            raise FinalizationError("census row lacks lexemeId")
+        if identity in census_ids:
+            raise FinalizationError(f"duplicate census lexemeId: {identity}")
+        census_ids.add(identity)
     inputs = {
         "direct": list(direct),
         "inferred": list(inferred),
@@ -145,7 +155,7 @@ def finalize_records(
         _validate_classifications(inputs[method], method)
     indexed = {method: _index(inputs[method], method) for method in METHODS}
     for method, records in indexed.items():
-        extras = sorted(set(records) - set(census))
+        extras = sorted(set(records) - census_ids)
         if extras:
             raise FinalizationError(f"{method} classifications contain non-census lexemeId: {extras[0]}")
 
@@ -153,7 +163,7 @@ def finalize_records(
     if not isinstance(direct_conflicts, list):
         raise FinalizationError("direct audit lacks unresolvedConflicts array")
     conflict_by_id = _index(direct_conflicts, "direct conflict")
-    extras = sorted(set(conflict_by_id) - set(census))
+    extras = sorted(set(conflict_by_id) - census_ids)
     if extras:
         raise FinalizationError(f"direct audit conflict is outside census: {extras[0]}")
     overlap = sorted(set(conflict_by_id) & set(indexed["direct"]))
@@ -164,7 +174,7 @@ def finalize_records(
     shadowed: list[dict] = []
     conflict_resolutions: list[dict] = []
     missing: list[str] = []
-    for identity in sorted(census):
+    for identity in sorted(census_ids):
         candidates = [(method, indexed[method][identity]) for method in METHODS if identity in indexed[method]]
         if not candidates:
             missing.append(identity)
@@ -194,7 +204,7 @@ def finalize_records(
                 })
     if missing:
         raise FinalizationError(f"classification coverage incomplete: {len(missing)} missing; first={missing[0]}")
-    if len(final) != len(census):
+    if len(final) != len(census_ids):
         raise AssertionError("final classification count differs from census")
 
     level_counts = Counter(row["level"] for row in final)
@@ -212,7 +222,7 @@ def finalize_records(
     coverage = {
         "schemaVersion": 1,
         "policy": {**POLICY, "precedence": list(METHODS)},
-        "census": len(census),
+        "census": len(census_ids),
         "classifications": len(final),
         "complete": True,
         "byLevel": {level: level_counts[level] for level in LEVELS},

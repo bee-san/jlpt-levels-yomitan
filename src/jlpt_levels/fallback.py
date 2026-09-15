@@ -83,6 +83,7 @@ def _substantive_support(row: dict) -> bool:
         features.get("componentKanji")
         or features.get("commonnessRank") is not None
         or features.get("morphology")
+        or features.get("orthography")
         or features.get("senseTags")
     )
 

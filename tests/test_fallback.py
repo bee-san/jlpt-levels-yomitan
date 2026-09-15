@@ -74,7 +74,7 @@ def test_classifier_uses_combined_features_and_abstains_out_of_domain() -> None:
     assert hard["features"]["maximumComponentKanjiLevel"] == "N1"
     assert unknown["level"] is None
     assert unknown["abstain"] is True
-    assert unknown["reason"] == "insufficient-feature-support"
+    assert unknown["reason"] == "below-confidence-threshold"
 
 
 def test_advanced_kanji_is_evidence_not_a_hard_assignment() -> None:
@@ -181,4 +181,4 @@ def test_file_pipeline_trains_evaluates_and_routes_abstentions(tmp_path: Path) -
     assert inferred.read_text() == ""
     routed = json.loads(adjudication.read_text())
     assert routed["method"] == "adjudication-required"
-    assert routed["inference"]["reason"] == "insufficient-feature-support"
+    assert routed["inference"]["reason"] == "below-confidence-threshold"

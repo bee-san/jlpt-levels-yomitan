@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import shutil
+import urllib.parse
 import urllib.request
 import zipfile
 from collections import Counter, defaultdict
@@ -66,8 +67,10 @@ def acquire(lock_path: Path, cache_dir: Path) -> Path:
     request = urllib.request.Request(artifact["url"], headers={"User-Agent": "jlpt-levels-yomitan/0.1"})
     try:
         with urllib.request.urlopen(request, timeout=120) as response, partial.open("wb") as output:
-            if artifact["url"].startswith("https://") and response.url != artifact["url"] and "/releases/download/" not in response.url:
-                raise JitendexError("download redirected outside an immutable release asset")
+            if artifact["url"].startswith("https://") and response.url != artifact["url"]:
+                redirected_host = urllib.parse.urlsplit(response.url).hostname
+                if redirected_host not in {"release-assets.githubusercontent.com", "objects.githubusercontent.com"}:
+                    raise JitendexError("download redirected outside GitHub release asset storage")
             shutil.copyfileobj(response, output, length=1024 * 1024)
             if output.tell() > artifact["bytes"]:
                 raise JitendexError("download exceeds pinned size")
