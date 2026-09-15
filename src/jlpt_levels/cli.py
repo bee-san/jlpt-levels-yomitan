@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from .contracts import DATA_DIR, SCHEMA_DIR, errors, load_json, validate_examples, validator
+from .fallback import predict_files, train_files
 from .identity import canonical_json_bytes, lexeme_id
 from .jitendex import acquire, build_census
 from .matching import match_files
@@ -87,6 +88,27 @@ def _match_vocabulary(args: argparse.Namespace) -> int:
     return 0
 
 
+def _train_fallback(args: argparse.Namespace) -> int:
+    report = train_files(
+        Path(args.training), Path(args.model), Path(args.report),
+        holdout_fraction=args.holdout_fraction, split_salt=args.split_salt,
+        min_token_count=args.min_token_count, confidence_threshold=args.confidence_threshold,
+    )
+    print(
+        f"OK: train={report['counts']['trainRows']}, holdout={report['counts']['holdoutRows']}, "
+        f"abstained={report['counts']['abstained']}"
+    )
+    return 0
+
+
+def _infer_fallback(args: argparse.Namespace) -> int:
+    counts = predict_files(
+        Path(args.model), Path(args.residual), Path(args.inferred), Path(args.adjudication_required)
+    )
+    print("OK: " + ", ".join(f"{name}={count}" for name, count in counts.items()))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -127,6 +149,21 @@ def parser() -> argparse.ArgumentParser:
     match.add_argument("--matches", default="data/derived/vocabulary-matches.jsonl")
     match.add_argument("--report", default="data/derived/vocabulary-match-report.json")
     match.set_defaults(func=_match_vocabulary)
+    train = commands.add_parser("train-fallback", help="calibrate the kanji and linguistic fallback")
+    train.add_argument("--training", default="data/derived/fallback-training.jsonl")
+    train.add_argument("--model", default="data/derived/fallback-model.json")
+    train.add_argument("--report", default="data/derived/fallback-holdout-report.json")
+    train.add_argument("--holdout-fraction", type=float, default=0.2)
+    train.add_argument("--split-salt", default="v1")
+    train.add_argument("--min-token-count", type=int, default=2)
+    train.add_argument("--confidence-threshold", type=float, default=0.62)
+    train.set_defaults(func=_train_fallback)
+    infer = commands.add_parser("infer-fallback", help="classify residuals and route abstentions")
+    infer.add_argument("--model", default="data/derived/fallback-model.json")
+    infer.add_argument("--residual", default="data/derived/fallback-residual.jsonl")
+    infer.add_argument("--inferred", default="data/derived/fallback-inferred.jsonl")
+    infer.add_argument("--adjudication-required", default="data/derived/fallback-adjudication-required.jsonl")
+    infer.set_defaults(func=_infer_fallback)
     return result
 
 
