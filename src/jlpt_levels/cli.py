@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
-from .contracts import SCHEMA_DIR, errors, load_json, validate_examples, validator
+from .contracts import DATA_DIR, SCHEMA_DIR, errors, load_json, validate_examples, validator
 from .identity import canonical_json_bytes, lexeme_id
+from .sources.common import CachedFetcher
+from .sources.wiktionary import WiktionaryJlptAdapter
 
 
 def _validate_contracts(_: argparse.Namespace) -> int:
@@ -41,6 +44,23 @@ def _lexeme_id(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ingest_vocabulary(args: argparse.Namespace) -> int:
+    registry = load_json(DATA_DIR / "config" / "vocabulary-sources.json")
+    sources = registry.get("sources", [])
+    if len(sources) != 1 or sources[0].get("adapter") != "wiktionary-jlpt":
+        raise ValueError("every approved vocabulary source must have an implemented adapter")
+    config = sources[0]
+    if config.get("license", {}).get("redistributable") is not True:
+        raise ValueError("source redistribution is not explicitly approved")
+    user_agent = args.user_agent or os.environ.get("JLPT_LEVELS_USER_AGENT")
+    if not user_agent:
+        raise ValueError("set --user-agent or JLPT_LEVELS_USER_AGENT to a contactable descriptive value")
+    fetcher = CachedFetcher(Path(args.cache_dir), user_agent, config["minimumDelayMs"])
+    adapter = WiktionaryJlptAdapter(config, fetcher)
+    adapter.run(Path(args.output), Path(args.report), offline=args.offline)
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -58,6 +78,13 @@ def parser() -> argparse.ArgumentParser:
     identity.add_argument("term")
     identity.add_argument("reading")
     identity.set_defaults(func=_lexeme_id)
+    ingest = commands.add_parser("ingest-vocabulary", help="acquire approved vocabulary evidence")
+    ingest.add_argument("--cache-dir", default=".cache/vocabulary")
+    ingest.add_argument("--output", default="data/evidence/vocabulary.jsonl")
+    ingest.add_argument("--report", default="data/evidence/vocabulary-report.json")
+    ingest.add_argument("--user-agent")
+    ingest.add_argument("--offline", action="store_true")
+    ingest.set_defaults(func=_ingest_vocabulary)
     return result
 
 

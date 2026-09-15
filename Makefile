@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check
+.PHONY: bootstrap validate test check ingest-vocabulary ingest-vocabulary-offline
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -13,3 +13,9 @@ test:
 	$(RUN) -m pytest
 
 check: validate test
+
+ingest-vocabulary:
+	$(RUN) -m jlpt_levels ingest-vocabulary
+
+ingest-vocabulary-offline:
+	$(RUN) -m jlpt_levels ingest-vocabulary --offline
