@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/jlpt-levels/schemas/lexeme-v1",
+  "title": "Jitendex lexeme identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lexemeId", "term", "reading", "jitendex"],
+  "properties": {
+    "lexemeId": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "term": {"type": "string", "minLength": 1},
+    "reading": {"type": "string", "minLength": 1},
+    "jitendex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dictionarySha256", "bank", "row"],
+      "properties": {
+        "dictionarySha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bank": {"type": "string", "pattern": "^term_bank_[1-9][0-9]*\\.json$"},
+        "row": {"type": "integer", "minimum": 0},
+        "sequence": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

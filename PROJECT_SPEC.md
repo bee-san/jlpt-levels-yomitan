@@ -5,8 +5,8 @@ Create and publish a reproducible, self-updating Yomitan term-frequency/metadata
 
 ## Truthfulness
 - N5–N1 assignments must be backed by attributable vocabulary-list evidence wherever available.
-- N0 means harder than N1 (post-N1 difficulty), not “unassigned,” “unknown,” or merely absent from sourced JLPT lists. N0 is a project-defined extension because the official JLPT ends at N1.
-- Where word-level evidence is absent, use documented inference based on component kanji levels, kana/commonness, readings, senses, and other reproducible features, followed by item-isolated Luna adjudication when deterministic evidence is insufficient. Every lexeme must receive a best-estimate N5–N0 level; uncertainty belongs in method/confidence/provenance fields, never in the meaning of N0. Do not present inferred labels as official.
+- N0 is a project-defined post-N1 difficulty band: it means the best available evidence supports “harder than N1,” not unknown, unassigned, or merely absent from N5–N1 lists. It is not an official JLPT level.
+- Where word-level evidence is absent, use a documented conservative inference based on component kanji levels, kana/commonness, readings, senses, and other reproducible features. If uncertainty remains, adjudicate each lexeme or tiny related batch in a fresh Bedrock Luna context with strict JSON. Every lexeme still receives a best-estimate N5–N0 band; uncertainty belongs in method, confidence, and provenance, never in the N0 label. Do not present inferred or adjudicated labels as official.
 - Preserve provenance, confidence, method, source timestamps, and conflicts in machine-readable audit data.
 - Cover every normalized Jitendex lexeme key (written form + reading), including kana-only and multi-reading entries. No silent drops.
 

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "jitendex",
+      "name": "Jitendex",
+      "role": "lexical-inventory",
+      "publisherUrl": "https://jitendex.org/",
+      "acquisition": {
+        "status": "pending",
+        "mediaType": "application/zip",
+        "maxBytes": 1073741824,
+        "minimumDelayMs": 1000
+      },
+      "license": {
+        "status": "unknown",
+        "redistributable": false
+      }
+    }
+  ]
+}

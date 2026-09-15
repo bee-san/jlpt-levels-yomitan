@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jlpt-levels-yomitan"
+version = "0.1.0"
+description = "Reproducible JLPT level metadata for the Jitendex lexicon"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+dependencies = ["jsonschema>=4.23,<5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<9"]
+
+[project.scripts]
+jlpt-levels = "jlpt_levels.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jlpt_levels"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "jlpt_levels/data/schemas"
+"examples" = "jlpt_levels/data/examples"
+"config" = "jlpt_levels/data/config"
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
