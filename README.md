@@ -6,7 +6,7 @@ N0 is the project-defined “harder than N1” band, not an official JLPT level 
 
 ## Status
 
-Architecture and contracts are frozen. Jitendex acquisition and its lexical census are implemented and pinned; classification is not yet implemented. No dictionary artifact is claimed yet.
+The deterministic pipeline is implemented from pinned Jitendex acquisition through direct-evidence resolution, conservative fallback inference, isolated Bedrock Luna adjudication, exact-census finalization, and Yomitan packaging. A release dictionary is emitted only after every normalized lexeme has one schema-valid classification and every registered source is explicitly cleared for redistribution.
 
 ## Pinned Jitendex inventory
 
@@ -34,6 +34,12 @@ python -m venv .venv
 make bootstrap
 make check
 jlpt-levels --help
+```
+
+After `finalize` has produced `data/derived/final-classifications.jsonl`, build the deterministic release ZIP, artifact manifest, and checksum sidecar with explicit revision metadata:
+
+```sh
+make package REVISION=2026.09.15 CREATED_AT=2026-09-15T00:00:00Z
 ```
 
 Key interfaces:

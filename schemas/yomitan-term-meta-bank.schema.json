@@ -16,12 +16,12 @@
           "reading": {"type": "string", "minLength": 1},
           "frequency": {
             "oneOf": [
-              {"const": {"value": 5, "displayValue": "N5"}},
-              {"const": {"value": 4, "displayValue": "N4"}},
+              {"const": {"value": 1, "displayValue": "N5"}},
+              {"const": {"value": 2, "displayValue": "N4"}},
               {"const": {"value": 3, "displayValue": "N3"}},
-              {"const": {"value": 2, "displayValue": "N2"}},
-              {"const": {"value": 1, "displayValue": "N1"}},
-              {"const": {"value": 0, "displayValue": "N0"}}
+              {"const": {"value": 4, "displayValue": "N2"}},
+              {"const": {"value": 5, "displayValue": "N1"}},
+              {"const": {"value": 6, "displayValue": "N0"}}
             ]
           }
         }

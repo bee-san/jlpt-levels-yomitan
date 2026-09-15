@@ -36,10 +36,10 @@ The final merge command is `jlpt-levels finalize`. Its precedence is `direct > i
 The public dictionary is format 3, `frequencyMode: rank-based`. Each lexeme emits:
 
 ```json
-["食べる","freq",{"reading":"たべる","frequency":{"value":5,"displayValue":"N5"}}]
+["食べる","freq",{"reading":"たべる","frequency":{"value":1,"displayValue":"N5"}}]
 ```
 
-Sortable values are `N5=5`, `N4=4`, `N3=3`, `N2=2`, `N1=1`, `N0=0`. This is an ordinal band, not corpus frequency. The reading-qualified object is mandatory so written forms with multiple readings do not collide. Bank filenames are `term_meta_bank_1.json`, etc., at ZIP root. Requirements are pinned to Yomitan schema commit `d34832d756e05dc00945e5b7d7ebc80963299a7a`; upstream schema bytes and digest must be vendored before release validation.
+Sortable rank values are `N5=1`, `N4=2`, `N3=3`, `N2=4`, `N1=5`, `N0=6`, so Yomitan's ascending rank-based sort follows increasing difficulty. This is an ordinal band, not corpus frequency. The reading-qualified object is mandatory so written forms with multiple readings do not collide. Bank filenames are `term_meta_bank_1.json`, etc., at ZIP root. Requirements are pinned to Yomitan schema commit `d34832d756e05dc00945e5b7d7ebc80963299a7a`; upstream schema bytes and digest must be vendored before release validation.
 
 ## Public-source policy
 

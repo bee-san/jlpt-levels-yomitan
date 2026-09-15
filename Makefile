@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize
+.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize package
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -43,3 +43,8 @@ adjudicate-residuals:
 
 finalize:
 	$(RUN) -m jlpt_levels finalize
+
+package:
+	@test -n "$(REVISION)" || (echo "REVISION is required" >&2; exit 2)
+	@test -n "$(CREATED_AT)" || (echo "CREATED_AT is required" >&2; exit 2)
+	$(RUN) -m jlpt_levels package --revision "$(REVISION)" --created-at "$(CREATED_AT)"
