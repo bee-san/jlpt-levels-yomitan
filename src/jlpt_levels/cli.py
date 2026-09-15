@@ -8,6 +8,7 @@ from .contracts import DATA_DIR, SCHEMA_DIR, errors, load_json, validate_example
 from .identity import canonical_json_bytes, lexeme_id
 from .jitendex import acquire, build_census
 from .matching import match_files
+from .resolution import resolve_files
 from .sources.common import CachedFetcher
 from .sources.wiktionary import WiktionaryJlptAdapter
 
@@ -87,6 +88,23 @@ def _match_vocabulary(args: argparse.Namespace) -> int:
     return 0
 
 
+def _resolve_direct(args: argparse.Namespace) -> int:
+    audit = resolve_files(
+        Path(args.lexemes),
+        Path(args.evidence),
+        Path(args.matches),
+        Path(args.classifications),
+        Path(args.audit),
+    )
+    coverage = audit["coverage"]["lexemes"]
+    print(
+        f"OK: resolved={coverage['resolvedDirect']}, "
+        f"conflicts={coverage['unresolvedDirectConflict']}, "
+        f"without-direct-votes={coverage['withoutDirectVotes']}"
+    )
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -127,6 +145,13 @@ def parser() -> argparse.ArgumentParser:
     match.add_argument("--matches", default="data/derived/vocabulary-matches.jsonl")
     match.add_argument("--report", default="data/derived/vocabulary-match-report.json")
     match.set_defaults(func=_match_vocabulary)
+    resolve = commands.add_parser("resolve-direct", help="resolve attributable direct evidence conservatively")
+    resolve.add_argument("--lexemes", default="data/derived/jitendex.lexemes.jsonl")
+    resolve.add_argument("--evidence", default="data/evidence/vocabulary.jsonl")
+    resolve.add_argument("--matches", default="data/derived/vocabulary-matches.jsonl")
+    resolve.add_argument("--classifications", default="data/derived/direct-classifications.jsonl")
+    resolve.add_argument("--audit", default="data/audit/direct-evidence-resolution.json")
+    resolve.set_defaults(func=_resolve_direct)
     return result
 
 
