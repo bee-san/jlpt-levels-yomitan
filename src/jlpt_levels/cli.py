@@ -7,6 +7,7 @@ from pathlib import Path
 from .contracts import DATA_DIR, SCHEMA_DIR, errors, load_json, validate_examples, validator
 from .identity import canonical_json_bytes, lexeme_id
 from .jitendex import acquire, build_census
+from .matching import match_files
 from .sources.common import CachedFetcher
 from .sources.wiktionary import WiktionaryJlptAdapter
 
@@ -78,6 +79,14 @@ def _ingest_vocabulary(args: argparse.Namespace) -> int:
     return 0
 
 
+def _match_vocabulary(args: argparse.Namespace) -> int:
+    report = match_files(
+        Path(args.lexemes), Path(args.evidence), Path(args.matches), Path(args.report)
+    )
+    print("OK: " + ", ".join(f"{name}={count}" for name, count in report["counts"].items()))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -112,6 +121,12 @@ def parser() -> argparse.ArgumentParser:
     ingest.add_argument("--user-agent")
     ingest.add_argument("--offline", action="store_true")
     ingest.set_defaults(func=_ingest_vocabulary)
+    match = commands.add_parser("match-vocabulary", help="conservatively join evidence to Jitendex lexemes")
+    match.add_argument("--lexemes", default="data/derived/jitendex.lexemes.jsonl")
+    match.add_argument("--evidence", default="data/evidence/vocabulary.jsonl")
+    match.add_argument("--matches", default="data/derived/vocabulary-matches.jsonl")
+    match.add_argument("--report", default="data/derived/vocabulary-match-report.json")
+    match.set_defaults(func=_match_vocabulary)
     return result
 
 
