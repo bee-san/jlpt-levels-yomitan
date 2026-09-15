@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
 import zipfile
@@ -57,34 +58,29 @@ def _sha256(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-def _validate_source_licenses(registry: dict[str, Any]) -> tuple[dict[str, dict[str, Any]], list[str]]:
-    sources = registry.get("sources")
-    if not isinstance(sources, list) or not sources:
-        raise PackagingError("source registry must contain at least one source")
-    by_id: dict[str, dict[str, Any]] = {}
+def _validate_source_licenses(registries: list[dict[str, Any]]) -> tuple[str, set[str]]:
     attributions: list[str] = []
-    for source in sources:
-        if not isinstance(source, dict):
-            raise PackagingError("source registry source must be an object")
-        source_id = source.get("id")
-        if not isinstance(source_id, str) or not source_id or source_id in by_id:
-            raise PackagingError("source registry IDs must be non-empty and unique")
-        license_info = source.get("license")
-        if not isinstance(license_info, dict) or license_info.get("redistributable") is not True:
-            raise PackagingError(f"source {source_id!r} is not cleared for redistribution")
-        attribution = license_info.get("attribution")
-        if isinstance(attribution, str) and attribution.strip():
-            attributions.append(attribution.strip())
-        by_id[source_id] = source
-    return by_id, attributions
-
-
-def _registered_artifact_digest(source: dict[str, Any]) -> str:
-    acquisition = source.get("acquisition")
-    digest = acquisition.get("sha256") if isinstance(acquisition, dict) else None
-    if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
-        raise PackagingError("Jitendex source registry is missing acquisition SHA-256")
-    return digest
+    source_ids: set[str] = set()
+    for registry in registries:
+        sources = registry.get("sources")
+        if not isinstance(sources, list) or not sources:
+            raise PackagingError("every source registry must contain at least one source")
+        for source in sources:
+            if not isinstance(source, dict):
+                raise PackagingError("source registry source must be an object")
+            source_id = source.get("id")
+            if not isinstance(source_id, str) or not source_id:
+                raise PackagingError("source registry source is missing an ID")
+            if source_id in source_ids:
+                raise PackagingError(f"duplicate registered source {source_id!r}")
+            source_ids.add(source_id)
+            license_info = source.get("license")
+            if not isinstance(license_info, dict) or license_info.get("redistributable") is not True:
+                raise PackagingError(f"source {source_id!r} is not cleared for redistribution")
+            attribution = license_info.get("attribution")
+            if isinstance(attribution, str) and attribution.strip():
+                attributions.append(attribution.strip())
+    return "\n".join(attributions), source_ids
 
 
 def _artifact_digest(lock: dict[str, Any]) -> str:
@@ -99,7 +95,7 @@ def _validated_rows(
     lexemes_path: Path,
     classifications_path: Path,
     expected_jitendex_sha256: str,
-    vocabulary_sources: dict[str, dict[str, Any]],
+    registered_evidence_sources: set[str],
 ) -> tuple[list[list[Any]], Counter[str], int]:
     lexemes = _load_jsonl(lexemes_path)
     classifications = _load_jsonl(classifications_path)
@@ -109,12 +105,12 @@ def _validated_rows(
         if found:
             raise PackagingError("invalid classification: " + "; ".join(found))
         lexeme_id = classification["lexemeId"]
-        if lexeme_id in by_id:
-            raise PackagingError(f"duplicate classification for {lexeme_id}")
         for evidence in classification["evidence"]:
             source_id = evidence["sourceId"]
-            if source_id not in vocabulary_sources:
-                raise PackagingError(f"unregistered evidence source {source_id!r}")
+            if source_id not in registered_evidence_sources:
+                raise PackagingError(f"classification evidence references unregistered source {source_id!r}")
+        if lexeme_id in by_id:
+            raise PackagingError(f"duplicate classification for {lexeme_id}")
         by_id[lexeme_id] = classification
 
     seen: set[str] = set()
@@ -163,10 +159,12 @@ def _zip_info(name: str) -> zipfile.ZipInfo:
     return info
 
 
-def _write_zip(path: Path, members: list[tuple[str, bytes]]) -> None:
-    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+def _zip_bytes(members: list[tuple[str, bytes]]) -> bytes:
+    result = io.BytesIO()
+    with zipfile.ZipFile(result, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, payload in members:
             archive.writestr(_zip_info(name), payload, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+    return result.getvalue()
 
 
 def build_dictionary(
@@ -188,18 +186,15 @@ def build_dictionary(
     lock = _load_json(jitendex_lock_path)
     if not isinstance(registry, dict) or not isinstance(vocabulary_registry, dict) or not isinstance(lock, dict):
         raise PackagingError("source registries and Jitendex lock must be objects")
-    package_sources, package_attributions = _validate_source_licenses(registry)
-    vocabulary_sources, vocabulary_attributions = _validate_source_licenses(vocabulary_registry)
-    jitendex_source = package_sources.get("jitendex")
-    if jitendex_source is None:
-        raise PackagingError("source registry does not contain Jitendex")
+    attribution, registered_sources = _validate_source_licenses([registry, vocabulary_registry])
     jitendex_digest = _artifact_digest(lock)
-    if _registered_artifact_digest(jitendex_source) != jitendex_digest:
-        raise PackagingError("Jitendex source registry digest disagrees with lock")
+    jitendex_sources = [source for source in registry["sources"] if source.get("id") == "jitendex"]
+    registry_digest = jitendex_sources[0].get("acquisition", {}).get("sha256") if len(jitendex_sources) == 1 else None
+    if registry_digest != jitendex_digest:
+        raise PackagingError("Jitendex source registry and artifact lock SHA-256 do not agree")
     rows, level_counts, conflicts = _validated_rows(
-        lexemes_path, classifications_path, jitendex_digest, vocabulary_sources
+        lexemes_path, classifications_path, jitendex_digest, registered_sources
     )
-    attribution = "\n".join(package_attributions + vocabulary_attributions)
 
     index = {
         "title": TITLE,
@@ -217,9 +212,7 @@ def build_dictionary(
         name = f"term_meta_bank_{number}.json"
         members.append((name, canonical_json_bytes(rows[start:start + bank_size])))
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    zip_path = output_dir / "jlpt-levels-yomitan.zip"
-    _write_zip(zip_path, members)
+    zip_payload = _zip_bytes(members)
     files = [
         {"path": name, "sha256": _sha256(payload), "bytes": len(payload)}
         for name, payload in members
@@ -229,14 +222,11 @@ def build_dictionary(
         "revision": revision,
         "createdAt": created_at,
         "sourceRegistrySha256": _sha256(source_registry_path.read_bytes()),
+        "vocabularyRegistrySha256": _sha256(vocabulary_registry_path.read_bytes()),
+        "lexemesSha256": _sha256(lexemes_path.read_bytes()),
+        "classificationsSha256": _sha256(classifications_path.read_bytes()),
         "jitendexSha256": jitendex_digest,
         "classifier": {"name": "complete-classification-pipeline", "version": "1.0.0"},
-        "inputs": {
-            "lexemes": {"sha256": _sha256(lexemes_path.read_bytes())},
-            "classifications": {"sha256": _sha256(classifications_path.read_bytes())},
-            "vocabularySourceRegistry": {"sha256": _sha256(vocabulary_registry_path.read_bytes())},
-            "jitendexLock": {"sha256": _sha256(jitendex_lock_path.read_bytes())},
-        },
         "counts": {
             "lexemes": len(rows),
             "classifications": len(rows),
@@ -248,9 +238,26 @@ def build_dictionary(
     found = errors("artifact-manifest.schema.json", manifest)
     if found:
         raise PackagingError("invalid artifact manifest: " + "; ".join(found))
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = output_dir / "jlpt-levels-yomitan.zip"
     manifest_path = output_dir / "artifact-manifest.json"
-    manifest_path.write_bytes(canonical_json_bytes(manifest))
-    zip_digest = _sha256(zip_path.read_bytes())
     sha256s_path = output_dir / "SHA256SUMS"
-    sha256s_path.write_text(f"{zip_digest}  {zip_path.name}\n", encoding="utf-8", newline="\n")
+    zip_digest = _sha256(zip_payload)
+    outputs = {
+        zip_path: zip_payload,
+        manifest_path: canonical_json_bytes(manifest),
+        sha256s_path: f"{zip_digest}  {zip_path.name}\n".encode(),
+    }
+    temporary: list[tuple[Path, Path]] = []
+    try:
+        for path, payload in outputs.items():
+            candidate = path.with_name(f".{path.name}.tmp")
+            candidate.write_bytes(payload)
+            temporary.append((candidate, path))
+        for candidate, path in temporary:
+            candidate.replace(path)
+    finally:
+        for candidate, _ in temporary:
+            candidate.unlink(missing_ok=True)
     return PackageResult(zip_path, manifest_path, sha256s_path, zip_digest)

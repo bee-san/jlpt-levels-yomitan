@@ -84,8 +84,8 @@ def _inputs(tmp_path: Path, count: int = 7) -> tuple[Path, Path, Path, Path, Pat
     vocabulary_registry_path.write_bytes(canonical_json_bytes({
         "version": 1,
         "sources": [
-            {"id": "source-a", "license": {"redistributable": True, "attribution": "Source A CC0"}},
-            {"id": "source-b", "license": {"redistributable": True, "attribution": "Source B CC0"}},
+            {"id": "source-a", "license": {"redistributable": True, "attribution": "Source A"}},
+            {"id": "source-b", "license": {"redistributable": True, "attribution": "Source B"}},
         ],
     }))
     lock_path.write_bytes(canonical_json_bytes({
@@ -157,6 +157,9 @@ def test_build_emits_reproducible_valid_yomitan_zip_and_sidecars(tmp_path: Path)
     assert manifest["counts"]["classifications"] == 7
     assert manifest["counts"]["conflicts"] == 1
     assert manifest["counts"]["levels"] == {"N0": 1, "N1": 1, "N2": 1, "N3": 2, "N4": 1, "N5": 1}
+    assert manifest["lexemesSha256"] == hashlib.sha256((tmp_path / "lexemes.jsonl").read_bytes()).hexdigest()
+    assert manifest["classificationsSha256"] == hashlib.sha256((tmp_path / "classifications.jsonl").read_bytes()).hexdigest()
+    assert manifest["vocabularyRegistrySha256"] == hashlib.sha256((tmp_path / "vocabulary-sources.json").read_bytes()).hexdigest()
     assert [item["path"] for item in manifest["files"]] == archive.namelist()
     for item in manifest["files"]:
         with zipfile.ZipFile(first.zip_path) as archive:
@@ -203,38 +206,38 @@ def test_build_fails_closed_on_classification_census_mismatch(tmp_path: Path, mu
         )
 
 
+def test_build_fails_before_replacing_outputs_when_manifest_metadata_is_invalid(tmp_path: Path) -> None:
+    prior = _build(tmp_path, "out")
+    original = {path.name: path.read_bytes() for path in (prior.zip_path, prior.manifest_path, prior.sha256s_path)}
+    with pytest.raises(PackagingError, match="manifest"):
+        lexemes, classifications, registry, vocabulary_registry, lock = _inputs(tmp_path)
+        build_dictionary(
+            lexemes, classifications, registry, vocabulary_registry, lock, tmp_path / "out",
+            revision="invalid", created_at="2026-09-15T00:00:00Z",
+        )
+    assert {path.name: path.read_bytes() for path in (prior.zip_path, prior.manifest_path, prior.sha256s_path)} == original
 
-def test_build_fails_closed_on_unregistered_or_uncleared_evidence_source(tmp_path: Path) -> None:
+
+def test_build_rejects_unregistered_evidence_and_registry_lock_digest_drift(tmp_path: Path) -> None:
     lexemes, classifications, registry, vocabulary_registry, lock = _inputs(tmp_path)
-    rows = [json.loads(line) for line in classifications.read_text().splitlines()]
-    rows[2]["evidence"][0]["sourceId"] = "unregistered"
-    _write_jsonl(classifications, rows)
-    with pytest.raises(PackagingError, match="unregistered"):
+    vocabulary_registry.write_bytes(canonical_json_bytes({"version": 1, "sources": [{
+        "id": "source-a", "license": {"redistributable": True, "attribution": "Source A"},
+    }]}))
+    with pytest.raises(PackagingError, match="unregistered source"):
+        build_dictionary(
+            lexemes, classifications, registry, vocabulary_registry, lock, tmp_path / "out",
+            revision="2026.09.15", created_at="2026-09-15T00:00:00Z",
+        )
+    _, _, registry, vocabulary_registry, lock = _inputs(tmp_path)
+    locked = json.loads(lock.read_text())
+    locked["artifact"]["sha256"] = "a" * 64
+    lock.write_bytes(canonical_json_bytes(locked))
+    with pytest.raises(PackagingError, match="do not agree"):
         build_dictionary(
             lexemes, classifications, registry, vocabulary_registry, lock, tmp_path / "out",
             revision="2026.09.15", created_at="2026-09-15T00:00:00Z",
         )
 
-
-def test_build_fails_before_writing_when_lock_and_registry_disagree(tmp_path: Path) -> None:
-    lexemes, classifications, registry, vocabulary_registry, lock = _inputs(tmp_path)
-    document = json.loads(registry.read_text())
-    document["sources"][0]["acquisition"]["sha256"] = "a" * 64
-    registry.write_bytes(canonical_json_bytes(document))
-    output = tmp_path / "out"
-    with pytest.raises(PackagingError, match="registry.*lock"):
-        build_dictionary(
-            lexemes, classifications, registry, vocabulary_registry, lock, output,
-            revision="2026.09.15", created_at="2026-09-15T00:00:00Z",
-        )
-    assert not output.exists()
-
-
-def test_manifest_binds_classification_and_inventory_bytes(tmp_path: Path) -> None:
-    result = _build(tmp_path)
-    manifest = json.loads(result.manifest_path.read_text())
-    assert manifest["inputs"]["classifications"]["sha256"] == hashlib.sha256((tmp_path / "classifications.jsonl").read_bytes()).hexdigest()
-    assert manifest["inputs"]["lexemes"]["sha256"] == hashlib.sha256((tmp_path / "lexemes.jsonl").read_bytes()).hexdigest()
 
 def test_build_fails_closed_when_any_registered_source_is_not_redistributable(tmp_path: Path) -> None:
     lexemes, classifications, registry, vocabulary_registry, lock = _inputs(tmp_path)
