@@ -13,6 +13,14 @@ The pipeline is a sequence of immutable, canonical-JSON stages:
 
 Each stage validates its input and output. Canonical JSON uses UTF-8, LF, sorted object keys, compact separators, and one terminal newline. Arrays have contract-defined sort keys. ZIP members use a fixed timestamp and mode. A release is identified by the SHA-256 of the ZIP, never by a mutable path alone.
 
+## Daily immutable update contract
+
+`.github/workflows/update.yml` is scheduled and manually dispatchable. Its build job has read-only repository permission, resolves one explicit date, verifies `source-inputs.lock.json`, runs the complete candidate target, and emits semantic source/classification diffs against the previous immutable baseline. Classification changes are keyed by `lexemeId`; changes to level or method require a durable explanation, while stale explanations are errors. Source identity comparison rejects additions or removals instead of silently narrowing the evidence graph.
+
+Only an exact, short-lived, data-only artifact inventory crosses into the release environment. The publish job alone has write permission. It validates archive members and checksums before credentials are used, creates a fresh monotonic `vYYYY.MM.DD.N` tag, uploads a draft without rebuilding, publishes it, and verifies freshly downloaded public bytes. No semantic change means no release. Failed publication is fixed forward under a fresh coordinate; tags are never moved or reused.
+
+The packaging boundary rechecks every classification evidence source against an independently redistributable vocabulary-source registry, verifies Jitendex's registered acquisition digest against its immutable lock, and records SHA-256 identities for the lexeme inventory, classification output, vocabulary registry, and source lock in the artifact manifest.
+
 ## Lexical identity
 
 `lexemeId` is `sha256:` plus lowercase SHA-256 of canonical JSON `[term,reading]`. `term` is the exact Jitendex lookup expression after its own normalization; `reading` is the exact Jitendex reading. Empty reading is forbidden: kana-only entries repeat the term as reading. Multi-reading entries are distinct lexemes. Source-local IDs and Jitendex sequence numbers are provenance, not identity.
@@ -36,10 +44,10 @@ The final merge command is `jlpt-levels finalize`. Its precedence is `direct > i
 The public dictionary is format 3, `frequencyMode: rank-based`. Each lexeme emits:
 
 ```json
-["食べる","freq",{"reading":"たべる","frequency":{"value":5,"displayValue":"N5"}}]
+["食べる","freq",{"reading":"たべる","frequency":{"value":1,"displayValue":"N5"}}]
 ```
 
-Sortable values are `N5=5`, `N4=4`, `N3=3`, `N2=2`, `N1=1`, `N0=0`. This is an ordinal band, not corpus frequency. The reading-qualified object is mandatory so written forms with multiple readings do not collide. Bank filenames are `term_meta_bank_1.json`, etc., at ZIP root. Requirements are pinned to Yomitan schema commit `d34832d756e05dc00945e5b7d7ebc80963299a7a`; upstream schema bytes and digest must be vendored before release validation.
+Sortable rank values are `N5=1`, `N4=2`, `N3=3`, `N2=4`, `N1=5`, `N0=6`, so Yomitan's ascending rank-based sort follows increasing difficulty. This is an ordinal band, not corpus frequency. The reading-qualified object is mandatory so written forms with multiple readings do not collide. Bank filenames are `term_meta_bank_1.json`, etc., at ZIP root. Requirements are pinned to Yomitan schema commit `d34832d756e05dc00945e5b7d7ebc80963299a7a`; upstream schema bytes and digest must be vendored before release validation.
 
 ## Public-source policy
 

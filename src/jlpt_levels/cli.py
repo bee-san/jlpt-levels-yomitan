@@ -11,6 +11,7 @@ from .finalize import finalize_files
 from .identity import canonical_json_bytes, lexeme_id
 from .jitendex import acquire, build_census
 from .matching import match_files
+from .package import build_dictionary
 from .resolution import resolve_files
 from .sources.common import CachedFetcher
 from .sources.wiktionary import WiktionaryJlptAdapter
@@ -153,6 +154,16 @@ def _finalize(args: argparse.Namespace) -> int:
     return 0
 
 
+def _package(args: argparse.Namespace) -> int:
+    result = build_dictionary(
+        Path(args.lexemes), Path(args.classifications), Path(args.source_registry),
+        Path(args.vocabulary_source_registry), Path(args.jitendex_lock), Path(args.output_dir), revision=args.revision,
+        created_at=args.created_at, bank_size=args.bank_size,
+    )
+    print(f"OK: {result.zip_path} sha256={result.zip_sha256}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(prog="jlpt-levels")
     commands = result.add_subparsers(dest="command", required=True)
@@ -239,6 +250,17 @@ def parser() -> argparse.ArgumentParser:
     finalize.add_argument("--baseline")
     finalize.add_argument("--change-explanations", help="JSON object mapping every intentional baseline change to a reason")
     finalize.set_defaults(func=_finalize)
+    package = commands.add_parser("package", help="build the deterministic Yomitan dictionary and release sidecars")
+    package.add_argument("--lexemes", default="data/derived/jitendex.lexemes.jsonl")
+    package.add_argument("--classifications", default="data/derived/final-classifications.jsonl")
+    package.add_argument("--source-registry", default="config/sources.json")
+    package.add_argument("--vocabulary-source-registry", default="config/vocabulary-sources.json")
+    package.add_argument("--jitendex-lock", default="data/sources/jitendex.lock.json")
+    package.add_argument("--output-dir", default="dist")
+    package.add_argument("--revision", required=True)
+    package.add_argument("--created-at", required=True)
+    package.add_argument("--bank-size", type=int, default=10_000)
+    package.set_defaults(func=_package)
     return result
 
 

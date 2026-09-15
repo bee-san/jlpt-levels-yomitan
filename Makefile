@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize
+.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback adjudicate-residuals finalize package release-candidate
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -43,3 +43,21 @@ adjudicate-residuals:
 
 finalize:
 	$(RUN) -m jlpt_levels finalize
+
+package:
+	@test -n "$(REVISION)" || (echo "REVISION is required" >&2; exit 2)
+	@test -n "$(CREATED_AT)" || (echo "CREATED_AT is required" >&2; exit 2)
+	$(RUN) -m jlpt_levels package --revision "$(REVISION)" --created-at "$(CREATED_AT)"
+
+release-candidate:
+	@test -n "$(RESOLVED_DATE)" || (echo "RESOLVED_DATE is required" >&2; exit 2)
+	$(MAKE) check
+	$(MAKE) census-jitendex
+	$(MAKE) ingest-vocabulary
+	$(MAKE) match-vocabulary
+	$(MAKE) resolve-direct
+	$(MAKE) train-fallback
+	$(MAKE) infer-fallback
+	$(MAKE) adjudicate-residuals
+	$(MAKE) finalize
+	$(MAKE) package REVISION="$(REVISION)" CREATED_AT="$$(printf '%s' '$(RESOLVED_DATE)' | tr . -)T00:00:00Z"

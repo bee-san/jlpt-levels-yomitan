@@ -117,7 +117,7 @@ def test_lexeme_identity_is_exact_and_stable() -> None:
 
 
 def test_level_encoding_is_bijective() -> None:
-    for value, level in enumerate(reversed(["N5", "N4", "N3", "N2", "N1", "N0"])):
+    for value, level in enumerate(["N5", "N4", "N3", "N2", "N1", "N0"], 1):
         bank = [["語", "freq", {"reading": "ご", "frequency": {"value": value, "displayValue": level}}]]
         assert errors("yomitan-term-meta-bank.schema.json", bank) == []
 

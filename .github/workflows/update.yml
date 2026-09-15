@@ -1,0 +1,113 @@
+name: update-dictionary
+
+on:
+  workflow_dispatch:
+    inputs:
+      resolved_date:
+        description: UTC source-resolution date (YYYY.MM.DD)
+        required: true
+        type: string
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jlpt-levels-update
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      revision: ${{ steps.revision.outputs.revision }}
+      changed: ${{ steps.changes.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install --require-hashes -r requirements-ci.txt
+      - name: Resolve one date for every stage
+        id: date
+        env:
+          REQUESTED_DATE: ${{ inputs.resolved_date }}
+        run: |
+          resolved="${REQUESTED_DATE:-$(date -u +%Y.%m.%d)}"
+          printf 'resolved_date=%s\n' "$resolved" >> "$GITHUB_OUTPUT"
+      - name: Verify immutable input inventory
+        run: python scripts/release.py verify-inputs . source-inputs.lock.json
+      - name: Select monotonic revision
+        id: revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESOLVED_DATE: ${{ steps.date.outputs.resolved_date }}
+        run: |
+          mapfile -t tags < <(gh api --paginate "repos/${GITHUB_REPOSITORY}/tags?per_page=100" --jq '.[].name')
+          revision=$(python scripts/release.py revision "$RESOLVED_DATE" "${tags[@]}")
+          printf 'revision=%s\n' "$revision" >> "$GITHUB_OUTPUT"
+      - name: Run acquisition, normalization, classification, packaging, and validation
+        env:
+          RESOLVED_DATE: ${{ steps.date.outputs.resolved_date }}
+          REVISION: ${{ steps.revision.outputs.revision }}
+        run: make release-candidate RESOLVED_DATE="$RESOLVED_DATE" REVISION="$REVISION"
+      - name: Detect semantic changes against previous immutable baseline
+        id: changes
+        run: |
+          python scripts/release.py source-diff baseline/source-identities.json build/source-identities.json build/source-diff.json
+          python scripts/release.py classification-diff baseline/classifications.jsonl build/classifications.jsonl release-change-explanations.json build/classification-diff.json
+          python scripts/check_release_candidate.py baseline build
+          changed=$(python -c 'import json; d=json.load(open("build/classification-diff.json")); print(str(bool(d["counts"]["added"] or d["counts"]["removed"] or d["counts"]["changed"])).lower())')
+          printf 'changed=%s\n' "$changed" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-candidate
+          path: |
+            build/jlpt-levels-yomitan.zip
+            build/SHA256SUMS
+            build/artifact-manifest.json
+            build/source-identities.json
+            build/classification-diff.json
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: build
+    if: needs.build.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-candidate
+          path: candidate
+      - name: Verify data-only handoff before exposing credentials
+        run: python scripts/check_release_candidate.py --handoff candidate
+      - name: Publish fresh immutable coordinate without rebuilding
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVISION: ${{ needs.build.outputs.revision }}
+        run: |
+          tag="v${REVISION}"
+          git tag --annotate "$tag" --message "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/$tag"
+          gh release create "$tag" --verify-tag --draft --latest \
+            candidate/jlpt-levels-yomitan.zip candidate/SHA256SUMS candidate/artifact-manifest.json \
+            --title "$tag" --notes "Automated JLPT Levels for Yomitan release."
+          gh release edit "$tag" --draft=false
+      - name: Verify publicly served bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVISION: ${{ needs.build.outputs.revision }}
+        run: python scripts/check_public_release.py "v${REVISION}" candidate

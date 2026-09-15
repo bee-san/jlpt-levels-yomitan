@@ -4,25 +4,207 @@
   "title": "Deterministic build artifact manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "revision", "createdAt", "sourceRegistrySha256", "jitendexSha256", "classifier", "counts", "files"],
+  "required": [
+    "schemaVersion",
+    "revision",
+    "createdAt",
+    "sourceRegistrySha256",
+    "jitendexSha256",
+    "classifier",
+    "inputs",
+    "counts",
+    "files"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "revision": {"type": "string", "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]{2}(?:\\.[1-9][0-9]*)?$"},
-    "createdAt": {"type": "string", "format": "date-time"},
-    "sourceRegistrySha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "jitendexSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "classifier": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"type": "string", "minLength": 1}, "version": {"type": "string", "pattern": "^[1-9][0-9]*\\.[0-9]+\\.[0-9]+$"}}},
+    "schemaVersion": {
+      "const": 1
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]{2}(?:\\.[1-9][0-9]*)?$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceRegistrySha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "jitendexSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "classifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
     "counts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["lexemes", "classifications", "conflicts", "levels"],
+      "required": [
+        "lexemes",
+        "classifications",
+        "conflicts",
+        "levels"
+      ],
       "properties": {
-        "lexemes": {"type": "integer", "minimum": 1},
-        "classifications": {"type": "integer", "minimum": 1},
-        "conflicts": {"type": "integer", "minimum": 0},
-        "levels": {"type": "object", "additionalProperties": false, "required": ["N5", "N4", "N3", "N2", "N1", "N0"], "properties": {"N5": {"type": "integer", "minimum": 0}, "N4": {"type": "integer", "minimum": 0}, "N3": {"type": "integer", "minimum": 0}, "N2": {"type": "integer", "minimum": 0}, "N1": {"type": "integer", "minimum": 0}, "N0": {"type": "integer", "minimum": 0}}}
+        "lexemes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "classifications": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "conflicts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "levels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "N5",
+            "N4",
+            "N3",
+            "N2",
+            "N1",
+            "N0"
+          ],
+          "properties": {
+            "N5": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "N4": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "N3": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "N2": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "N1": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "N0": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
       }
     },
-    "files": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "bytes"], "properties": {"path": {"type": "string", "pattern": "^[^/].*"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "bytes": {"type": "integer", "minimum": 1}}}}
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256",
+          "bytes"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^[^/].*"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lexemes",
+        "classifications",
+        "vocabularySourceRegistry",
+        "jitendexLock"
+      ],
+      "properties": {
+        "lexemes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "classifications": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "vocabularySourceRegistry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "jitendexLock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    }
   }
 }
