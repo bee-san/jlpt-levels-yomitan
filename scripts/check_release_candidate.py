@@ -7,7 +7,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-EXPECTED = {"jlpt-levels-yomitan.zip", "SHA256SUMS", "artifact-manifest.json", "source-identities.json", "classification-diff.json"}
+EXPECTED = {"jlpt-levels-yomitan.zip", "SHA256SUMS", "artifact-manifest.json", "source-identities.json", "classifications.jsonl", "classification-diff.json"}
 
 
 def fail(message: str) -> None:

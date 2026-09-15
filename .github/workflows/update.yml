@@ -68,11 +68,22 @@ jobs:
         run: make release-candidate RESOLVED_DATE="$RESOLVED_DATE" REVISION="$REVISION" YOMITAN_ROOT="$YOMITAN_ROOT"
       - name: Detect semantic changes against previous immutable baseline
         id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          mkdir -p baseline
+          if gh release view --json tagName >/dev/null 2>&1; then
+            first_release=false
+            gh release download --pattern source-identities.json --pattern classifications.jsonl --dir baseline
+          else
+            first_release=true
+            cp build/source-identities.json baseline/source-identities.json
+            cp build/classifications.jsonl baseline/classifications.jsonl
+          fi
           python scripts/release.py source-diff baseline/source-identities.json build/source-identities.json build/source-diff.json
           python scripts/release.py classification-diff baseline/classifications.jsonl build/classifications.jsonl release-change-explanations.json build/classification-diff.json
           python scripts/check_release_candidate.py baseline build
-          changed=$(python -c 'import json; d=json.load(open("build/classification-diff.json")); print(str(bool(d["counts"]["added"] or d["counts"]["removed"] or d["counts"]["changed"])).lower())')
+          changed=$(FIRST_RELEASE="$first_release" python -c 'import json, os; d=json.load(open("build/classification-diff.json")); print(str(os.environ["FIRST_RELEASE"] == "true" or bool(d["counts"]["added"] or d["counts"]["removed"] or d["counts"]["changed"])).lower())')
           printf 'changed=%s\n' "$changed" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
@@ -82,6 +93,7 @@ jobs:
             build/SHA256SUMS
             build/artifact-manifest.json
             build/source-identities.json
+            build/classifications.jsonl
             build/classification-diff.json
           if-no-files-found: error
           retention-days: 1
@@ -113,7 +125,7 @@ jobs:
           git push origin "refs/tags/$tag"
           gh release create "$tag" --verify-tag --draft --latest \
             candidate/jlpt-levels-yomitan.zip candidate/SHA256SUMS candidate/artifact-manifest.json \
-            candidate/source-identities.json candidate/classification-diff.json \
+            candidate/source-identities.json candidate/classifications.jsonl candidate/classification-diff.json \
             --title "$tag" --notes "Automated JLPT Levels for Yomitan release."
           gh release edit "$tag" --draft=false
       - name: Verify publicly served bytes

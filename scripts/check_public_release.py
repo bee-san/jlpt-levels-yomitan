@@ -32,6 +32,7 @@ def main() -> None:
         "SHA256SUMS",
         "artifact-manifest.json",
         "source-identities.json",
+        "classifications.jsonl",
         "classification-diff.json",
     }
     if set(assets) != expected:
