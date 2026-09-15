@@ -110,6 +110,7 @@ def test_workflows_have_read_only_build_and_isolated_write_job() -> None:
     assert "make release-candidate" in workflow
     assert "npm --prefix \"$RUNNER_TEMP/yomitan\" run build:libs" in workflow
     assert "YOMITAN_ROOT" in workflow
+    assert "JLPT_LEVELS_USER_AGENT:" in workflow
     assert "candidate/source-identities.json candidate/classification-diff.json" in workflow
     assert "cache-hit" not in workflow
 

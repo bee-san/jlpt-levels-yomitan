@@ -61,6 +61,7 @@ jobs:
           printf 'revision=%s\n' "$revision" >> "$GITHUB_OUTPUT"
       - name: Run acquisition, normalization, classification, packaging, and validation
         env:
+          JLPT_LEVELS_USER_AGENT: jlpt-levels-yomitan/${{ github.sha }} (https://github.com/${{ github.repository }}/issues)
           RESOLVED_DATE: ${{ steps.date.outputs.resolved_date }}
           REVISION: ${{ steps.revision.outputs.revision }}
           YOMITAN_ROOT: ${{ runner.temp }}/yomitan
