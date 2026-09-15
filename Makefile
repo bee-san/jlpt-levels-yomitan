@@ -1,4 +1,4 @@
-.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct
+.PHONY: bootstrap validate test check acquire-jitendex census-jitendex ingest-vocabulary ingest-vocabulary-offline match-vocabulary resolve-direct train-fallback infer-fallback
 
 PYTHON ?= python
 RUN = PYTHONPATH=$(CURDIR)/src $(PYTHON)
@@ -31,3 +31,9 @@ match-vocabulary:
 
 resolve-direct:
 	$(RUN) -m jlpt_levels resolve-direct
+
+train-fallback:
+	$(RUN) -m jlpt_levels train-fallback
+
+infer-fallback:
+	$(RUN) -m jlpt_levels infer-fallback

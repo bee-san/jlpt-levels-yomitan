@@ -43,5 +43,6 @@ Key interfaces:
 - `config/sources.json`: source registry; public inclusion requires verified redistribution.
 - `docs/architecture.md`: pipeline, identity, N0 semantics, conflicts, deterministic artifacts, and Yomitan encoding.
 - `docs/source-policy.md`: acquisition and licensing policy.
+- `docs/fallback-classifier.md`: versioned grouped-holdout kanji/linguistic inference and abstention contract.
 
 Software is MIT-licensed. Source data and generated data are governed independently by their recorded source licenses; the MIT license does not grant redistribution rights to third-party data.
