@@ -8,7 +8,7 @@ on:
         required: true
         type: string
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "17 3 1 * *" # monthly, 1st at 03:17 UTC (was daily)
 
 permissions:
   contents: read
